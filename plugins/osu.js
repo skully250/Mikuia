@@ -15,7 +15,8 @@ exports.handleCommand = function(tokens, from, channel) {
 	switch(tokens[0]) {
 		case 'rank':
 			if(!_.isUndefined(tokens[1])) {
-				var user = tokens[1]
+				tokens.splice(0, 1)
+				var user = tokens.join(' ')
 			} else {
 				var user = Mikuia.channels[channel].plugins.osu.name
 			}
