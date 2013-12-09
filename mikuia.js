@@ -4,6 +4,7 @@ var fs = require('fs')
 var irc = require('irc')
 var moment = require('moment')
 var osuapi = require('./osuapi')
+var repl = require('repl')
 var request = require('request')
 var _ = require('underscore')
 _.str = require('underscore.string')
@@ -209,5 +210,9 @@ function initTwitch() {
 
 	client.on('message#', function(nick, to, text, message) {
 		Mikuia.handleMessage(nick, to, text)
+		Mikuia.log(Mikuia.LogStatus.Normal, '(' + cli.greenBright(to) + ') ' + cli.yellowBright(nick) + ': ' + cli.whiteBright(text))
 	})
 }
+
+var r = repl.start('Mikuia> ')
+r.context.Mikuia = Mikuia

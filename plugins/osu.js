@@ -81,6 +81,9 @@ exports.init = function(m) {
 		password: Mikuia.settings.plugins.osu.password
 	})
 
+	exports._api = osu
+	exports._bancho = bancho
+
 	bancho.on('registered', function(message) {
 		Mikuia.log(Mikuia.LogStatus.Success, 'Connected to osu!Bancho.')
 	})
@@ -118,6 +121,8 @@ exports.runHook = function(hookName) {
 
 							if(diff > 0) {
 								Mikuia.say(channel, '+' + diff + 'pp!')
+								Mikuia.log(Mikuia.LogStatus.Normal, 
+cli.greenBright(Mikuia.channels[channel].plugins.osu.name) + ' gained ' + cli.yellowBright('+' + diff + 'pp') + '.')
 							} else {
 								Mikuia.say(channel, diff + 'pp!')
 							}
@@ -146,7 +151,7 @@ exports.runHook = function(hookName) {
 				if(err) {
 					throw err
 				}
-				console.log(userData)
+				//console.log(userData)
 			})
 			break
 	}
