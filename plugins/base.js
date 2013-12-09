@@ -1,14 +1,39 @@
 var Mikuia
 var _
 
-exports.commands = ['plugins']
+exports.commands = ['mikuia']
 
 exports.handleCommand = function(tokens, from, channel) {
 	switch(tokens[0]) {
-		case 'plugins':
-			_.each(Mikuia.plugins, function(plugin, pluginName) {
-				// wat
-			})
+		case 'mikuia':
+			if(from == Mikuia.settings.plugins.base.admin.toLowerCase()) {
+				switch(tokens[1]) {
+					case 'channels':
+						var channelList = ""
+						_.each(Mikuia.channels, function(channel, channelName) {
+							if(channelList != "") {
+								channelList += ', '
+							}
+							channelList += channelName
+						})
+						Mikuia.say(channel, 'Enabled channels: ' + channelList)
+						break
+					case 'plugins':
+						var pluginList = ""
+						_.each(Mikuia.plugins, function(plugin, pluginName) {
+							if(pluginList != "") {
+								pluginList += ', '
+							}
+							pluginList += pluginName
+						})
+						Mikuia.say(channel, 'Loaded plugins: ' + pluginList)
+						break
+					default:
+						Mikuia.say(channel, 'Hey, I\'m Mikuia, and I\'m a bot!')
+						break
+				}
+			}
+			break
 	}
 }
 
@@ -20,6 +45,7 @@ exports.init = function(m) {
 exports.name = 'base'
 
 exports.settings = {
+	admin: 'ADMIN_NAME_HERE',
 	name: 'TWITCH_NAME_HERE',
 	password: 'OAUTH_HASH_HERE'
 }
