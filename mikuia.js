@@ -114,32 +114,33 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 		if(err) {
 			Mikuia.log(Mikuia.LogStatus.Fatal, 'Can\'t access "plugins" directory.')
 		} else {
-			Mikuia.log(Mikuia.LogStatus.Normal, 'Found ' + cli.greenBright(files.length) + ' plugins.')
+			Mikuia.log(Mikuia.LogStatus.Normal, 'Found ' + cli.greenBright(files.length) + ' entries.')
 		}
 		async.each(files, function loadPlugin(fileName, callback) {
-			
-			Mikuia.log(Mikuia.LogStatus.Normal, 'Loading plugin: ' + cli.yellowBright(fileName) + '.')
-			var plugin = require('./plugins/' + fileName.replace('.js', ''))
-			if(_.isUndefined(Mikuia.settings.plugins[plugin.name])) {
-				Mikuia.settings.plugins[plugin.name] = {}
-			}
-			_.each(plugin.settings, function loadDefaultSetting(defaultValue, key) {
-				if(_.isUndefined(Mikuia.settings.plugins[plugin.name][key])) {
-					Mikuia.settings.plugins[plugin.name][key] = defaultValue
+			if(fileName.indexOf('.js') > 0) {
+				Mikuia.log(Mikuia.LogStatus.Normal, 'Loading plugin: ' + cli.yellowBright(fileName) + '.')
+				var plugin = require('./plugins/' + fileName.replace('.js', ''))
+				if(_.isUndefined(Mikuia.settings.plugins[plugin.name])) {
+					Mikuia.settings.plugins[plugin.name] = {}
 				}
-			})
-			_.each(plugin.commands, function loadCommand(command) {
-				Mikuia.commands[command] = plugin.name
-			})
-			_.each(plugin.hooks, function loadHook(hookName) {
-				Mikuia.hooks[hookName].push(plugin.name)
-			})
-			_.each(plugin.patterns, function loadPattern(pattern, patternName) {
-				Mikuia.patterns[patternName] = {plugin: plugin.name, pattern: pattern}
-			})
-			Mikuia.enabled[plugin.name] = []
-			plugin.init(Mikuia)
-			Mikuia.plugins[plugin.name] = plugin
+				_.each(plugin.settings, function loadDefaultSetting(defaultValue, key) {
+					if(_.isUndefined(Mikuia.settings.plugins[plugin.name][key])) {
+						Mikuia.settings.plugins[plugin.name][key] = defaultValue
+					}
+				})
+				_.each(plugin.commands, function loadCommand(command) {
+					Mikuia.commands[command] = plugin.name
+				})
+				_.each(plugin.hooks, function loadHook(hookName) {
+					Mikuia.hooks[hookName].push(plugin.name)
+				})
+				_.each(plugin.patterns, function loadPattern(pattern, patternName) {
+					Mikuia.patterns[patternName] = {plugin: plugin.name, pattern: pattern}
+				})
+				Mikuia.enabled[plugin.name] = []
+				plugin.init(Mikuia)
+				Mikuia.plugins[plugin.name] = plugin
+			}
 			callback()
 
 		}, function loadPluginEnd(err) {
