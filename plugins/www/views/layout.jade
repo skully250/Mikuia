@@ -8,6 +8,7 @@ html
 		script(type='text/javascript', src='/js/bootstrap.min.js')
 		meta(name='viewport', content='width=device-width, initial-scale=1.0')
 	body
+		- console.log(user)
 		nav.navbar.navbar-inverse.navbar-fixed-top(role='navigation')
 			.container
 				div.navbar-header
@@ -25,10 +26,23 @@ html
 							a(href='http://github.com/Maxorq/Mikuia', target='_blank') GitHub
 						li
 							a(href='https://www.paypal.com/us/cgi-bin/webscr?cmd=_flow&SESSION=UJcSEznYnWYQs43fdIq7ZWu8wTpRozCBV1FQbYCGQu2YHxGmguDEsOrv3Tq&dispatch=5885d80a13c0db1f8e263663d3faee8def8934b92a630e40b7fef61ab7e9fe63', target='_blank') Donate
+					ul.nav.navbar-nav.navbar-right
+						if !user
+							li
+								a(href='/auth/twitch') Login with Twitch
+						else
+							li.dropdown
+								a.dropdown-toggle(href='#', data-toggle='dropdown')
+									img(width='16', height='16', src='#{user._json.logo}')
+									|  #{user._json.display_name} 
+									b.caret
+								ul.dropdown-menu
+									li
+										a(href='/logout') Logout
 		block content
 		block footerScript
 		.container.text-muted
 			hr
 			.pull-right
 				| Made by 
-				a(href='http://github.com/Maxorq') Maxorq
+				a(href='http://github.com/Maxorq', target='_blank') Maxorq
