@@ -18,6 +18,9 @@ exports.handleCommand = function(tokens, from, channel) {
 						})
 						Mikuia.say(channel, 'Enabled channels: ' + channelList)
 						break
+					case 'donate':
+						Mikuia.say(channel, 'Aww, you want to donate? Thank you! http://bit.ly/1clkjef')
+						break
 					case 'plugins':
 						var pluginList = ""
 						_.each(Mikuia.plugins, function(plugin, pluginName) {
