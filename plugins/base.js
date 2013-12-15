@@ -50,5 +50,8 @@ exports.name = 'base'
 exports.settings = {
 	admin: 'ADMIN_NAME_HERE',
 	name: 'TWITCH_NAME_HERE',
-	password: 'OAUTH_HASH_HERE'
+	password: 'OAUTH_HASH_HERE',
+	clientID: 'API_CLIENT_ID',
+	clientSecret: 'API_CLIENT_SECRET',
+	callbackURL: 'http://localhost:5587/auth/twitch/callback'
 }
