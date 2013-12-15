@@ -1,0 +1,14 @@
+.index-screenshot {
+	border: 1px solid #ccc;
+	box-shadow: 2px 2px #ddd;
+	padding: 5px;
+}
+
+.index-supported-img {
+	height: 32px;
+	width: 32px;
+}
+
+.text-small {
+	font-size: 12px;
+}

@@ -1,0 +1,54 @@
+extends layout
+
+block content
+	.jumbotron
+		.container
+			.col-md-8
+				h1
+					| Mikuia
+					span(style='font-size: 24px;')
+						|  for 
+						a(href='http://twitch.tv') Twitch.tv
+				p
+					| You stream games. We make the experience better. Open-source.
+					br
+					small Supports:
+					br
+					img.index-supported-img(src='/img/games/osu.png', rel='tooltip', data-toggle='tooltip', title='osu!')
+					br
+					.text-muted.text-small It'll get better. I promise.
+			.col-md-4
+				br
+				img.index-screenshot(src='/img/mikuia.png')
+	.container
+		.col-md-12
+			h2
+				.glyphicon.glyphicon-send
+				|  Game Events
+			p
+				| Realtime event notifications.
+				br
+				| Rank changes, level results, match stats.
+				br
+				| Put the info in the chat for viewers, get it through Steam, save it somewhere.
+				br
+			h2
+				.glyphicon.glyphicon-stats
+				|  Chat Utilities
+			p
+				| Commands for checking ranks, points, and levels.
+				br
+				| Let your viewers check stats with a command instead of asking repeatedly.
+			h2
+				.glyphicon.glyphicon-flash
+				|  Plugin API
+			p
+				| Nearly every single feature is a part of a plugin.
+				br
+				| Add, delete, enable, disable plugins you want to.
+				br
+				| Customize your experience.
+
+block footerScript
+	script(type='text/javascript')
+		$('[rel="tooltip"]').tooltip()
