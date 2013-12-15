@@ -32,7 +32,7 @@ exports.handleCommand = function(tokens, from, channel) {
 						Mikuia.say(channel, 'Loaded plugins: ' + pluginList)
 						break
 					default:
-						Mikuia.say(channel, 'Hey, I\'m Mikuia, and I\'m a bot!')
+						Mikuia.say(channel, 'Hey, I\'m Mikuia, and I\'m a bot! Learn more about me at http://statpoint.info:5587/')
 						break
 				}
 			}
