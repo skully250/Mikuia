@@ -36,6 +36,7 @@ var Mikuia = new function() {
 		fs: fs,
 		irc: irc,
 		moment: moment,
+		redis: redis,
 		request: request,
 		_: _
 	}

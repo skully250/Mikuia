@@ -11,6 +11,7 @@ exports.init = function(m) {
 	Mikuia = m
 	express = require('express')
 	passport = require('passport')
+	redis = Mikuia.modules.redis
 	twitch = require('passport-twitchtv').Strategy
 	app = express()
 
@@ -49,12 +50,16 @@ exports.init = function(m) {
 
 	app.get('/', function(req, res) {
 		res.render('index')
+		redis.smembers('channels', function(err, data) {
+			console.log(data)
+		})
 	})
 
 	app.get('/auth/twitch', passport.authenticate('twitchtv', {scope: ['user_read']}))
 	app.get('/auth/twitch/callback', passport.authenticate('twitchtv', {
 		failureRedirect: '/login'
 	}), function(req, res) {
+		redis.sadd('channels', req.user._json.display_name)
 		res.redirect('/')
 	})
 
