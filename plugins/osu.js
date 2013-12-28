@@ -179,9 +179,9 @@ exports.runHook = function(hookName) {
 									}
 
 									if(rnk > 0) {
-										Mikuia.say(channel, 'Rank: #' + user.pp_rank + ' (' + rnk +' up!)')
+										Mikuia.say(channel, 'Rank: #' + user.pp_rank + ' (' + rnk +' down)')
 									} else {
-										Mikuia.say(channel, 'Rank: #' + user.pp_rank + ' (' + Math.abs(rnk) +' down)')
+										Mikuia.say(channel, 'Rank: #' + user.pp_rank + ' (' + Math.abs(rnk) +' up!)')
 									}
 								}
 
