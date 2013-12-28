@@ -7,6 +7,9 @@ exports.manifest = {
 	description: 'Provides basic commands.',
 	type: 'channel',
 	commands: {
+		'mikuia.about': {
+			description: 'Shows some info about Mikuia.'
+		},
 		'mikuia.channels': {
 			description: 'Shows the list of enabled channels. Spammy.'
 		},
@@ -31,6 +34,9 @@ exports.manifest = {
 
 exports.handleCommand = function(command, tokens, from, channel) {
 	switch(command) {
+		case 'mikuia.about':
+			Mikuia.say(channel, 'Hey, I\'m Mikuia, and I\'m a bot! Learn more about me at http://statpoint.info:5587/')
+			break
 		case 'mikuia.channels':
 			if(from == Mikuia.settings.plugins.base.admin.toLowerCase()) {
 				var channelList = ""
@@ -57,9 +63,6 @@ exports.handleCommand = function(command, tokens, from, channel) {
 				})
 				Mikuia.say(channel, 'Loaded plugins: ' + pluginList)
 			}
-			break
-		default:
-			Mikuia.say(channel, 'Hey, I\'m Mikuia, and I\'m a bot! Learn more about me at http://statpoint.info:5587/')
 			break
 	}
 }
