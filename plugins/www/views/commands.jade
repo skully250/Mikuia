@@ -9,7 +9,9 @@ block content
 			.panel.panel-default.mikuia-blue-glow
 				.panel-heading Add a command
 				.panel-body
-					label(for='newCommand_name') Name (without !)
+					label(for='newCommand_name') 
+						| Name
+						b(style='color: red;')  (WITHOUT EXCLAMATION MARKS)
 					input.form-control#newCommand_name(type='text', name='newCommand_name', placeholder='(example: rank)')
 					label(for='newCommand_command') Command
 					select.form-control#newCommand_command(name='newCommand_command')
