@@ -1,0 +1,79 @@
+extends layout
+
+block content
+	.container
+		.col-md-12
+			div.page-header
+				h1 Commands
+		.col-md-6
+			.panel.panel-default.mikuia-blue-glow
+				.panel-heading Add a command
+				.panel-body
+					label(for='newCommand_name') Name (without !)
+					input.form-control#newCommand_name(type='text', name='newCommand_name', placeholder='(example: rank)')
+					label(for='newCommand_command') Command
+					select.form-control#newCommand_command(name='newCommand_command')
+					br
+					button.btn.btn-primary.btn-sm.pull-right#newCommand_add Add
+		#panels
+
+block footerScript
+	script(type='text/javascript').
+		listeners.push('commands', 'commands:add', 'commands:remove')
+		var commands = {}
+
+		function removeCommand(command) {
+			io.emit('commands.remove', {
+				name: command
+			})
+		}
+
+		io.emit('getCommands')
+
+		io.on('commands', function(data) {
+			commands = data.commands
+			for(var commandKey in data.commands) {
+				var command = data.commands[commandKey]
+				$('#newCommand_command').append('<option name="' + commandKey + '">' + commandKey + ' - ' + command.description +' (' + command.plugin + ')</option>')
+			}
+		})
+
+		io.on('commands:add', function(data) {
+			$('#panels').append(
+				'<div class="col-md-6" style="display: none;" id="command_' + data.name + '"> \
+					<div class="panel panel-default"> \
+						<div class="panel-heading">' + data.name + '</div> \
+						<div class="panel-body"> \
+							<small class="text-muted">' + data.command + ' - ' + commands[data.command].description + ' \
+								<ul id="command_' + data.name + '_arguments"></ul> \
+							</small> \
+							<button type="button" onclick="removeCommand(\'' + data.name + '\')" class="btn btn-danger btn-xs pull-right">Remove</button> \
+						</div>  \
+					</div> \
+				</div>'
+			)
+			if(commands[data.command].arguments != undefined) {
+				$('#command_' + data.name + '_arguments').before('<br />Arguments:')
+				for(var argumentKey in commands[data.command].arguments) {
+					var argument = commands[data.command].arguments[argumentKey]
+					if(argument.optional) {
+						argument.description += ' (optional)'
+					}
+					$('#command_' + data.name + '_arguments').append('<b>' + argumentKey + '</b> - ' + argument.description)
+				}
+			}
+			$('#command_' + data.name).fadeIn('slow')
+		})
+
+		io.on('commands:remove', function(data) {
+			$('#command_' + data.name).fadeOut('slow', function() {
+				$('#command_' + data.name).remove()
+			})
+		})
+
+		$('#newCommand_add').click(function() {
+			io.emit('commands.add', {
+				name: $('#newCommand_name').val(),
+				command: $('#newCommand_command option:selected').attr('name')
+			})
+		})

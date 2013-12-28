@@ -1,48 +1,68 @@
-!!!5
-html
-	head
-		title Mikuia
-		link(rel='stylesheet', href='/css/bootstrap.min.css')
-		link(rel='stylesheet', href='/css/mikuia.css')
-		script(type='text/javascript', src='//code.jquery.com/jquery-1.10.2.min.js')
-		script(type='text/javascript', src='/js/bootstrap.min.js')
-		meta(name='viewport', content='width=device-width, initial-scale=1.0')
-	body
-		- console.log(user)
-		nav.navbar.navbar-inverse.navbar-fixed-top(role='navigation')
-			.container
-				div.navbar-header
-					button.navbar-toggle(type='button', data-toggle='collapse', data-target='navbar-collapse')
-						span.sr-only Toggle navigation
-						span.icon-bar
-						span.icon-bar
-						span.icon-bar
-					a.navbar-brand(href='/') Mikuia
-				div.collapse.navbar-collapse#navbar-collapse
-					ul.nav.navbar-nav
-						li.active
-							a(href='/') Home
-						li
-							a(href='http://github.com/Maxorq/Mikuia', target='_blank') GitHub
-						li
-							a(href='https://www.paypal.com/us/cgi-bin/webscr?cmd=_flow&SESSION=UJcSEznYnWYQs43fdIq7ZWu8wTpRozCBV1FQbYCGQu2YHxGmguDEsOrv3Tq&dispatch=5885d80a13c0db1f8e263663d3faee8def8934b92a630e40b7fef61ab7e9fe63', target='_blank') Donate
-					ul.nav.navbar-nav.navbar-right
-						if !user
+if !isAjax
+	!!!5
+	html
+		head
+			title Mikuia
+			link(rel='stylesheet', href='/css/bootstrap.min.css')
+			link(rel='stylesheet', href='/css/mikuia.css')
+			script(type='text/javascript', src='//code.jquery.com/jquery-1.10.2.min.js')
+			script(type='text/javascript', src='/js/bootstrap.min.js')
+			script(type='text/javascript', src='/socket.io/socket.io.js')
+			script(type='text/javascript', src='/js/mikuia.js')
+			meta(name='viewport', content='width=device-width, initial-scale=1.0')
+			style(type='text/css').
+				body {
+					padding-top: 60px;
+				}
+		body
+			- console.log(user)
+			nav.navbar.navbar-inverse.navbar-fixed-top(role='navigation')
+				.container
+					div.navbar-header
+						button.navbar-toggle(type='button', data-toggle='collapse', data-target='navbar-collapse')
+							span.sr-only Toggle navigation
+							span.icon-bar
+							span.icon-bar
+							span.icon-bar
+						a.navbar-brand(href='/') Mikuia
+					div.collapse.navbar-collapse#navbar-collapse
+						ul.nav.navbar-nav
 							li
-								a(href='/auth/twitch') Login with Twitch
-						else
-							li.dropdown
-								a.dropdown-toggle(href='#', data-toggle='dropdown')
-									img(width='16', height='16', src='#{user._json.logo}')
-									|  #{user._json.display_name} 
-									b.caret
-								ul.dropdown-menu
-									li
-										a(href='/logout') Logout
-		block content
-		block footerScript
+								a(href='/') Home
+							li
+								a(href='http://github.com/Maxorq/Mikuia', target='_blank') GitHub
+							li
+								a(href='https://www.paypal.com/us/cgi-bin/webscr?cmd=_flow&SESSION=UJcSEznYnWYQs43fdIq7ZWu8wTpRozCBV1FQbYCGQu2YHxGmguDEsOrv3Tq&dispatch=5885d80a13c0db1f8e263663d3faee8def8934b92a630e40b7fef61ab7e9fe63', target='_blank') Donate
+						ul.nav.navbar-nav.navbar-right
+							if !user
+								li
+									a.noajax(href='/auth/twitch') Login with Twitch
+							else
+								li.dropdown
+									a.dropdown-toggle(href='#', data-toggle='dropdown')
+										img(width='16', height='16', src='#{user._json.logo}')
+										|  #{user._json.display_name} 
+										b.caret
+									ul.dropdown-menu
+										li
+											a(href='/settings') Settings
+										li
+											a(href='/commands') Commands
+										li
+											a(href='/plugins') Plugins
+										li.divider
+										li
+											a.noajax(href='/logout') Logout
+		#content
+			block content
+			block footerScript
+		#spinner(style='display: none; position: absolute; left: 50%; top: 50%;')
+			img(src='/img/spinner.gif')
 		.container.text-muted
 			hr
 			.pull-right
 				| Made by 
 				a(href='http://github.com/Maxorq', target='_blank') Maxorq
+else
+	block content
+	block footerScript

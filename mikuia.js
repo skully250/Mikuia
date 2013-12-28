@@ -28,7 +28,9 @@ var Mikuia = new function() {
 	this.commands = {}
 	this.enabled = {}
 	this.hooks = {
-		'1m': []
+		'1m': [],
+		'chat': [],
+		'enable': []
 	}
 	this.modules = {
 		async: async,
@@ -40,7 +42,6 @@ var Mikuia = new function() {
 		request: request,
 		_: _
 	}
-	this.patterns = {}
 	this.plugins = {}
 	this.settings = {
 		plugins: {}
@@ -52,15 +53,19 @@ var Mikuia = new function() {
 			var tokens = message.replace('!', '').split(' ')
 			var trigger = tokens[0].toLowerCase()
 
-			if(!_.isUndefined(this.commands[trigger])) {
-				this.plugins[this.commands[trigger]].handleCommand(tokens, from, channel)
+			if(!_.isUndefined(this.channels[channel].commands[trigger])) {
+				var command = this.channels[channel].commands[trigger].command
+				if(this.channels[channel].plugins[this.commands[command].plugin] != undefined) {
+					this.plugins[this.commands[command].plugin].handleCommand(command, tokens, from, channel)
+				}
 			}
+		} else {
+			_.each(self.hooks.chat, function(pluginName) {
+				if(self.channels[channel].plugins[pluginName] != undefined) {
+					self.plugins[pluginName].handleMessage(from, channel, message)
+				}
+			})
 		}
-		_.each(this.patterns, function(patternInfo, patternName) {
-			if(patternInfo.pattern.test(message)) {
-				self.plugins[patternInfo.plugin].handlePattern(patternName, from, channel, message)
-			}
-		})
 	}
 
 	this.log = function(status, message) {
@@ -102,6 +107,49 @@ var Mikuia = new function() {
 		})
 	}
 
+	this.joinChannel = function(channelName) {
+		var self = this
+		client.join('#' + channelName, function(nick, message) {
+			self.log(self.LogStatus.Success, 'Joined #' + cli.greenBright(channelName) + ' on Twitch IRC.')
+		})
+	}
+
+	this.leaveChannel = function(channelName, reason) {
+		var self = this
+		client.part('#' + channelName, function(nick, reason, message) {
+			self.log(self.LogStatus.Success, 'Left #' + cli.redBright(channelName) + ' on Twitch IRC.')
+		})
+	}
+
+	this.update = function(channelName) {
+		var self = this
+		self.channels['#' + channelName] = {
+			commands: {},
+			plugins: {}
+		}
+		redis.smembers('channel:' + channelName + ':plugins', function(err2, plugins) {
+			_.each(plugins, function(pluginName) {
+				self.channels['#' + channelName].plugins[pluginName] = {}
+				redis.get('channel:' + channelName + ':plugin:' + pluginName + ':settings', function(err3, settings) {
+					self.channels['#' + channelName].plugins[pluginName].settings = JSON.parse(settings)
+					if(self.enabled[pluginName].indexOf('#' + channelName) == -1) {
+						self.enabled[pluginName].push('#' + channelName)
+						if(self.hooks.enable.indexOf(pluginName) > -1) {
+							self.plugins[pluginName].load('#' + channelName)
+						}
+					}
+				})
+			})
+		})
+		redis.smembers('channel:' + channelName + ':commands', function(err2, commands) {
+			_.each(commands, function(commandName) {
+				redis.get('channel:' + channelName + ':command:' + commandName, function(err3, command) {
+					self.channels['#' + channelName].commands[commandName] = JSON.parse(command)
+				})
+			})
+		})
+	}
+
 }
 
 Mikuia.log(Mikuia.LogStatus.Normal, 'Starting up Mikuia...')
@@ -122,26 +170,26 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 			if(fileName.indexOf('.js') > 0) {
 				Mikuia.log(Mikuia.LogStatus.Normal, 'Loading plugin: ' + cli.yellowBright(fileName) + '.')
 				var plugin = require('./plugins/' + fileName.replace('.js', ''))
-				if(_.isUndefined(Mikuia.settings.plugins[plugin.name])) {
-					Mikuia.settings.plugins[plugin.name] = {}
+				if(_.isUndefined(Mikuia.settings.plugins[plugin.manifest.name])) {
+					Mikuia.settings.plugins[plugin.manifest.name] = {}
 				}
-				_.each(plugin.settings, function loadDefaultSetting(defaultValue, key) {
-					if(_.isUndefined(Mikuia.settings.plugins[plugin.name][key])) {
-						Mikuia.settings.plugins[plugin.name][key] = defaultValue
-					}
+				if(plugin.manifest.settings != undefined) {
+					_.each(plugin.manifest.settings.server, function loadDefaultSetting(defaultValue, key) {
+						if(_.isUndefined(Mikuia.settings.plugins[plugin.manifest.name][key])) {
+							Mikuia.settings.plugins[plugin.manifest.name][key] = defaultValue
+						}
+					})
+				}
+				_.each(plugin.manifest.commands, function loadCommand(data, command) {
+					Mikuia.commands[command] = data
+					Mikuia.commands[command].plugin = plugin.manifest.name
 				})
-				_.each(plugin.commands, function loadCommand(command) {
-					Mikuia.commands[command] = plugin.name
+				_.each(plugin.manifest.hooks, function loadHook(hookName) {
+					Mikuia.hooks[hookName].push(plugin.manifest.name)
 				})
-				_.each(plugin.hooks, function loadHook(hookName) {
-					Mikuia.hooks[hookName].push(plugin.name)
-				})
-				_.each(plugin.patterns, function loadPattern(pattern, patternName) {
-					Mikuia.patterns[patternName] = {plugin: plugin.name, pattern: pattern}
-				})
-				Mikuia.enabled[plugin.name] = []
+				Mikuia.enabled[plugin.manifest.name] = []
 				plugin.init(Mikuia)
-				Mikuia.plugins[plugin.name] = plugin
+				Mikuia.plugins[plugin.manifest.name] = plugin
 			}
 			callback()
 
@@ -175,40 +223,55 @@ function initTwitch() {
 
 	client.on('registered', function(message) {
 		Mikuia.log(Mikuia.LogStatus.Success, 'Connected to Twitch IRC.')
-		fs.readdir('channels', function(err, files) {
-			if(err) {
-				Mikuia.log(Mikuia.LogStatus.Fatal, 'Can\'t access "channels" directory.')
-			} else {
-				Mikuia.log(Mikuia.LogStatus.Normal, 'Found ' + cli.greenBright(files.length) + ' channels.')
-			}
-			async.each(files, function readChannelInfo(fileName, callback) {
-				fs.readFile('channels/' + fileName, {encoding: 'utf8'}, function(err, data) {
-					if(err) {
-						Mikuia.log(Mikuia.LogStatus.Error, 'There was an error reading ' + fileName + ' (' + err + ')')
-					} else {
-						data = JSON.parse(data)
-						if(!_.isEmpty(data.twitch)) {
-							Mikuia.channels['#' + data.twitch.toLowerCase()] = data
-							_.each(data.plugins, function(value, key) {
-								Mikuia.enabled[key].push('#' + data.twitch.toLowerCase())
-							})
-							client.join('#' + data.twitch.toLowerCase(), function(nick, message) {
-								Mikuia.log(Mikuia.LogStatus.Success, 'Joined #' + cli.greenBright(data.twitch) + ' on Twitch IRC.')
-								_.each(data.plugins, function(value, key) {
-									Mikuia.plugins[key].load('#' + data.twitch.toLowerCase())
-								})
-							})
-						}
-					}
-					callback(err)
-				})
-
-			}, function readChannelDirEnd(err) {
+		redis.smembers('channels', function(redisErr, channels) {
+			async.each(channels, function loadChannel(channelName, callback) {
+				Mikuia.joinChannel(channelName)
+				Mikuia.update(channelName)
+				callback()
+			}, function loadChannelsEnd(err) {
 				if(err) {
 					throw err
 				}
 			})
 		})
+		// fs.readdir('channels', function(err, files) {
+		// 	if(err) {
+		// 		Mikuia.log(Mikuia.LogStatus.Fatal, 'Can\'t access "channels" directory.')
+		// 	} else {
+		// 		Mikuia.log(Mikuia.LogStatus.Normal, 'Found ' + cli.greenBright(files.length) + ' channels.')
+		// 	}
+		// 	async.each(files, function readChannelInfo(fileName, callback) {
+		// 		fs.readFile('channels/' + fileName, {encoding: 'utf8'}, function(err, data) {
+		// 			if(err) {
+		// 				Mikuia.log(Mikuia.LogStatus.Error, 'There was an error reading ' + fileName + ' (' + err + ')')
+		// 			} else {
+		// 				data = JSON.parse(data)
+		// 				if(!_.isEmpty(data.twitch)) {
+		// 					Mikuia.channels['#' + data.twitch.toLowerCase()] = data
+		// 					_.each(data.plugins, function(value, key) {
+		// 						if(key in Mikuia.plugins) {
+		// 							Mikuia.enabled[key].push('#' + data.twitch.toLowerCase())
+		// 						}
+		// 					})
+		// 					client.join('#' + data.twitch.toLowerCase(), function(nick, message) {
+		// 						Mikuia.log(Mikuia.LogStatus.Success, 'Joined #' + cli.greenBright(data.twitch) + ' on Twitch IRC.')
+		// 						_.each(data.plugins, function(value, key) {
+		// 							if(key in Mikuia.plugins) {
+		// 								Mikuia.plugins[key].load('#' + data.twitch.toLowerCase())
+		// 							}
+		// 						})
+		// 					})
+		// 				}
+		// 			}
+		// 			callback(err)
+		// 		})
+
+		// 	}, function readChannelDirEnd(err) {
+		// 		if(err) {
+		// 			throw err
+		// 		}
+		// 	})
+		// })
 	})
 
 	client.on('message#', function(nick, to, text, message) {

@@ -1,0 +1,145 @@
+extends layout
+
+block content
+	.container
+		.col-md-12
+			div.page-header
+				.pull-right
+					a.btn.btn-primary.btn-sm(href='/commands') Commands
+					|  
+					a.btn.btn-primary.btn-sm(href='/plugins') Plugins
+				h1 Settings
+		.col-md-6
+			.panel.panel-default
+				.panel-body.mikuia-blue-glow
+					span.text-muted#mikuia_status Loading Mikuia status...
+					button.btn.btn-sm.pull-right#mikuia_status_button Mikuia
+		#panels
+
+block footerScript
+	script(type='text/javascript')
+		listeners.push('settings', 'settings:enable', 'settings:disable', 'settings:plugin', 'settings:plugin:save', 'settings:plugins')
+
+		var plugins = {}
+
+		function enable() {
+			$('#mikuia_status').html('Mikuia is currently enabled.')
+			$('#mikuia_status_button').html('Disable Mikuia')
+			$('#mikuia_status_button').removeClass('btn-primary')
+		}
+
+		function disable() {
+			$('#mikuia_status').html('Mikuia is disabled on your channel.')
+			$('#mikuia_status_button').addClass('btn-primary')
+			$('#mikuia_status_button').html('Enable Mikuia')
+			$('.panel-plugin').fadeOut('slow', function() {
+				$('.panel-plugin').remove()
+			})
+		}
+
+		function save(pluginName) {
+			var settings = {}
+			for(var settingKey in plugins[pluginName].settings.channel) {
+				switch(plugins[pluginName].settings.channel[settingKey].type) {
+					case 'radio':
+						settings[settingKey] = $('#plugin_' + pluginName + '_' + settingKey).prop('checked')
+						break
+					case 'text':
+						settings[settingKey] = $('#plugin_' + pluginName + '_' + settingKey).val()
+						break
+				}
+			}
+			io.emit('settings.plugin', {
+				plugin: pluginName,
+				settings: settings
+			})
+		}
+
+		$('#mikuia_status_button').click(function() {
+			if($('#mikuia_status_button').hasClass('btn-primary')) {
+				io.emit('settings.enable')
+			} else {
+				io.emit('settings.disable')
+			}
+		})
+
+		io.emit('getSettings')
+		io.on('settings', function(data) {
+			if(data.enabled) {
+				enable()
+			} else {
+				disable()
+			}
+		})
+
+		io.on('settings:enable', function(data) {
+			if(data.reply) {
+				enable()
+				io.emit('getSettings')
+			}
+		})
+
+		io.on('settings:disable', function(data) {
+			if(data.reply) {
+				disable()
+			}
+		})
+
+		io.on('settings:plugin', function(data) {
+			for(var settingKey in data.settings) {
+				var setting = data.settings[settingKey]
+				switch(plugins[data.plugin].settings.channel[settingKey].type) {
+					case 'radio':
+						$('#plugin_' + data.plugin + '_' + settingKey).prop('checked', setting)
+						break
+					case 'text':
+						$('#plugin_' + data.plugin + '_' + settingKey).val(setting)
+						break
+				}
+			}
+		})
+
+		io.on('settings:plugin:save', function(data) {
+			if(data.reply == 'OK') {
+				$('#plugin_' + data.plugin + '_save').removeClass('btn-primary').html('Saved!')
+				setTimeout(function() {
+					$('#plugin_' + data.plugin + '_save').addClass('btn-primary').html('Save')
+				}, 3000)
+			}
+		})
+
+		io.on('settings:plugins', function(data) {
+			for(var pluginName in data.plugins) {
+				var plugin = data.plugins[pluginName]
+				plugins[pluginName] = plugin
+				if(!$('#plugin_' + plugin.name).length && plugin.settings.channel != undefined) {
+					$('#panels').append(
+						'<div class="col-md-6 panel-plugin" style="display: none;" id="plugin_' + plugin.name + '"> \
+							<div class="panel panel-default"> \
+								<div class="panel-heading"><img src="/img/plugins/' + plugin.name + '.png" width="24" height="24" /> ' + plugin.fullName + ' \
+								<div class="panel-body"></div> \
+							</div> \
+						</div>'
+					)
+					for(var settingKey in plugin.settings.channel) {
+						var setting = plugin.settings.channel[settingKey]
+						var id = 'plugin_' + plugin.name + '_' + settingKey
+						switch(setting.type) {
+							case 'radio':
+								$('#plugin_' + plugin.name + ' .panel-body').append(
+									'<label><input type="checkbox" name="' + id + '" id="' + id + '"> ' + setting.description + '</label><br /> \
+								')
+								break
+							case 'text':
+								$('#plugin_' + plugin.name + ' .panel-body').append(
+									'<label for="' + id + '">' + setting.name + '</label> \
+									<input type="text" name="' + id + '" id="' + id + '" placeholder="' + setting.description + '"><br /> \
+								')
+								break
+						}
+					}
+					$('#plugin_' + plugin.name + ' .panel-body').append('<button type="button" onclick="save(\'' + plugin.name + '\')" class="btn btn-primary btn-sm pull-right" id="plugin_' + plugin.name + '_save">Save</button>')
+					$('#plugin_' + plugin.name).fadeIn('slow')
+				}
+			}
+		})

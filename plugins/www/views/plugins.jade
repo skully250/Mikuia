@@ -1,0 +1,48 @@
+extends layout
+
+block content
+	.container
+		.col-md-12
+			div.page-header
+				h1 Plugins
+			table.table.table-bordered.table-striped
+				thead
+					th Name
+					th Description
+					th Actions
+				tbody
+					each plugin in plugins
+						if plugin.manifest.type != 'server'
+							tr
+								td=plugin.manifest.fullName
+								td=plugin.manifest.description
+								td
+									- if(installed.indexOf(plugin.manifest.name) == -1) 
+										button.btn.btn-xs.btn-success(id="plugin_#{plugin.manifest.name}", onclick="io.emit('plugin.enable', { plugin: '#{plugin.manifest.name}' })") Enable
+									- else 
+										button.btn.btn-xs.btn-danger(id="plugin_#{plugin.manifest.name}", onclick="io.emit('plugin.disable', { plugin: '#{plugin.manifest.name}' })") Disable
+block footerScript
+	script(type='text/javascript').
+		listeners.push('plugin:enable', 'plugin:disable')
+
+		function enable(plugin) {
+			$('#plugin_' + plugin).removeClass('btn-success')
+			$('#plugin_' + plugin).addClass('btn-danger')
+			$('#plugin_' + plugin).html('Disable')
+			$('#plugin_' + plugin).attr('onclick', "io.emit('plugin.disable', { plugin: '" + plugin + "' })")
+		}
+
+		function disable(plugin) {
+			$('#plugin_' + plugin).removeClass('btn-danger')
+			$('#plugin_' + plugin).addClass('btn-success')
+			$('#plugin_' + plugin).html('Enable')
+			$('#plugin_' + plugin).attr('onclick', "io.emit('plugin.enable', { plugin: '" + plugin + "' })")
+		}
+
+		io.on('plugin:enable', function(data) {
+			enable(data.plugin)
+		})
+
+		io.on('plugin:disable', function(data) {
+			disable(data.plugin)
+		})
