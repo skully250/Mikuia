@@ -1,4 +1,6 @@
-var app, async, connect, express, Mikuia, passport, passportIo, redis, RedisStore, twitch, _
+var app, async, connect, express, Mikuia, passport, passportIo, redis, RedisStore, request, twitch, _
+
+var changelog
 
 exports.manifest = {
 	name: 'www',
@@ -25,6 +27,7 @@ exports.init = function(m) {
 	passportIo = require('passport.socketio')
 	redis = Mikuia.modules.redis
 	RedisStore = require('connect-redis')(connect)
+	request = require('request')
 	twitch = require('passport-twitchtv').Strategy
 	_ = Mikuia.modules._
 	app = express()
@@ -241,7 +244,9 @@ exports.init = function(m) {
 	}
 
 	routes.index = function(req, res) {
-		res.render('index')
+		res.render('index', {
+			changelog: changelog
+		})
 		redis.smembers('channels', function(err, data) {
 			console.log(data)
 		})
@@ -287,5 +292,17 @@ exports.init = function(m) {
 	})
 
 	app.listen(5587)
+
+	request({
+		url: 'https://api.github.com/repos/Maxorq/Mikuia/commits',
+		headers: {
+			'User-Agent': 'Mikuia'
+		}
+	}, function(error, response, body) {
+		if(!error && response.statusCode == 200) {
+			changelog = JSON.parse(body)
+			console.log(changelog)
+		}
+	})
 
 }

@@ -21,7 +21,7 @@ block content
 				br
 				img.index-screenshot(src='/img/mikuia.png')
 	.container
-		.col-md-12
+		.col-md-6
 			h2
 				.glyphicon.glyphicon-send
 				|  Game Events
@@ -48,7 +48,14 @@ block content
 				| Add, delete, enable, disable plugins you want to.
 				br
 				| Customize your experience.
-
+		.col-md-6
+			h2 Changelog
+			each commit in changelog
+				abbr.timeago(title=commit.commit.committer.date)
+				|  - 
+				a(href=commit.html_url) #{commit.commit.message}
+				br
 block footerScript
 	script(type='text/javascript')
 		$('[rel="tooltip"]').tooltip()
+		$('abbr.timeago').timeago()
