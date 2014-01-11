@@ -311,7 +311,6 @@ exports.init = function(m) {
 	}, function(error, response, body) {
 		if(!error && response.statusCode == 200) {
 			changelog = JSON.parse(body)
-			console.log(changelog)
 		}
 	})
 
