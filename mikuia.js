@@ -43,7 +43,7 @@ var Mikuia = new function() {
 		moment: moment,
 		redis: redis,
 		request: request,
-		twitch: twitch
+		twitch: twitch,
 		_: _
 	}
 	this.plugins = {}
@@ -226,6 +226,12 @@ function initTwitch() {
 	twitch = new Twitchy({
 		key: Mikuia.settings.plugins.base.clientID,
 		secret: Mikuia.settings.plugins.base.clientSecret
+	})
+
+	twitch.auth(function(err, token) {
+		if(!err) {
+			console.log('Authed with token ' + token)
+		}
 	})
 
 	Mikuia.log(Mikuia.LogStatus.Normal, 'Connecting to Twitch IRC...')
