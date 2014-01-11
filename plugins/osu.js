@@ -147,10 +147,10 @@ exports.init = function(m) {
 }
 
 exports.load = function(channel) {
-	if(Mikuia.channels[channel].plugins.osu.settings) {
-		osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, function(err, user) {
-			userData[user.username] = {}
-			if(!err) {
+	if(Mikuia.channels[channel].plugins.osu.settings && Mikuia.channels[channel].plugins.osu.settings.name) {
+		osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, function(err, user) {			
+			if(!err && user != undefined) {
+				userData[user.username] = {}
 				userData[user.username].pp = user.pp_raw
 				userData[user.username].rank = user.pp_rank
 			}
