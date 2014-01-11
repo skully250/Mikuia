@@ -245,6 +245,20 @@ exports.init = function(m) {
 		res.render('commands')
 	}
 
+	routes.guide = function(req, res) {
+		var wrongCommands = 0
+		_.each(Mikuia.channels, function(channel) {
+			for(var command in channel.commands) {
+				if(command.indexOf('!') == 0) {
+					wrongCommands++
+				}
+			}
+		})
+		res.render('guide', {
+			wrongCommands: wrongCommands
+		})
+	}
+
 	routes.index = function(req, res) {
 		async.parallel({
 			github: function(callback) {
@@ -299,10 +313,12 @@ exports.init = function(m) {
 
 	app.get('/', routes.index)
 	app.get('/ajax/', routes.index)
-	app.get('/channels', ensureAuthenticated, routes.channels)
-	app.get('/ajax/channels', ensureAuthenticated, routes.channels)
+	app.get('/channels', routes.channels)
+	app.get('/ajax/channels', routes.channels)
 	app.get('/commands', ensureAuthenticated, routes.commands)
 	app.get('/ajax/commands', ensureAuthenticated, routes.commands)
+	app.get('/guide', routes.guide)
+	app.get('/ajax/guide', routes.guide)
 	app.get('/settings', ensureAuthenticated, routes.settings)
 	app.get('/ajax/settings', ensureAuthenticated, routes.settings)
 	app.get('/plugins', ensureAuthenticated, routes.plugins)

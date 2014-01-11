@@ -1,0 +1,186 @@
+extends layout
+
+block content
+	.jumbotron(style='margin-top: -60px;')
+		.container
+			.col-md-8
+				h1
+					| Guide
+					span(style='font-size: 24px;')
+						|  for newbies.
+				| This is a guide. Read it before crying for help.
+				br
+				small I am serious.
+				.text-small If you do, I'll find you.
+				.text-muted(style='font-size: 10px;') And kill you.
+				.text-muted(style='font-size: 6px;') Until you're dead.
+			.col-md-4
+				br
+				img.index-screenshot(src='/img/guide/0.png')
+	.jumbotron(style='background-color: red; padding: 0px;')
+		.container(style='text-align: center;')
+			span(style='color: white; font-size: 16px;') THIS IS A WORK IN PROGRESS YADA YADA BULLSHIT. IF SOMETHING DOESN'T WORK PRAY TO YOUR GOD OF CHOICE.
+	.container
+		.row
+			.col-md-8
+				h1 Chapter 1: Wat?
+				p
+					| You may be asking yourself. What the hell is Mikuia?
+					br
+					| FEAR NOT! I'm here to explain the overall idea, basics, current state of pop-culture, and much more!
+					br
+					| Basically, Mikuia is a Twitch.tv bot designed to be customizable like '85 Toyota Supra.
+					br
+					| You may have noticed already, maybe not, that it's pretty different from the other bots.
+					br
+					| The first big difference is that you start with 
+					b no commands at all.
+					br
+					i.text-primary WAIT WHAT? NO COMMANDS? WTF.
+					br
+					b SHUT UP. 
+					| While the other bots give you a huge amount of features, you probably won't need all of them.
+					br
+					| That's why Mikuia gives you a full control of the enabled commands, and their names.
+					br
+					| Let's start then.
+			.col-md-4
+				img.index-screenshot(src='/img/guide/1.png')
+		br
+		.row
+			.col-md-8
+				h1 Chapter 2: Starting it up.
+				p
+					i.text-primary Hurr durr, how do I even start it up.
+					br
+					| Please, it's pretty self-explanatory.
+					br
+					| There is a button on the navigation bar called "Login with Twitch".
+					br
+					| Guess what it does. 
+					br
+					i.text-primary SANDWICHES FOR SCHOOL?
+					br
+					| Sigh, no. It logins you with Twitch.
+					br
+					i.text-primary OOOOH. I GUESS I WAS JUST SUPPOSED TO KNOW THAT. THIS IS BUGGED.
+					br
+					| I hate you already. Anyways, after you login, click your username in top right corner, and select Settings.
+					br
+					| Pretty easy, huh?
+					br
+					i.text-primary Instructions not clear enough. Got my dick stuck in the fan.
+					br
+					| What? How the... fuck it, just notice the Enable Mikuia button. It's pretty useful.
+					br
+					i.text-primary You want me to click it or something? Too much work.
+					br
+					| Fuck you.
+			.col-md-4
+				img.index-screenshot(src='/img/guide/2.png')
+		br
+		.row
+			.col-md-8
+				h1 Chapter 3: Understanding plugins.
+				p
+					i.text-primary OH I KNOW I KNOW!!!111oneoneoene
+					br
+					| You know what, genius?
+					br
+					i.text-primary I KNOW WHAT PLUGINS ARE!!!!!!!11
+					br
+					| You? What? How?
+					br
+					i.text-primary THIS IS JUST LIKE MINECRAFT!
+					br
+					| Oh my god. You are a retard.
+					br
+					| Anyways, enabling Mikuia gives you results similar to singletapping Big Black on HR DT without sound,
+					br
+					|  while being blindfolded and repeatedly shot in the arm with a BB gun.
+					br
+					b YOU GET FUCKING NOTHING.
+					br
+					| First thing you want to do, is navigating to Plugins.
+					br
+					| There you can find (currently pretty limited) a selection of plugins.
+					br
+					| Select the ones you need, for example if you play osu!, enable the 'osu' plugin.
+					br
+					| Plugins give you commands, sometimes event handlers, and many other features.
+					br
+					i.text-primary HURR DURR YOU RIPPED IT OFF MINECRAFT
+					br
+					| God help me.
+			.col-md-4
+				img.index-screenshot(src='/img/guide/3.png')
+		br
+		.row
+			.col-md-8
+				h1 Chapter 4: Setting up plugins.
+				p
+					| Great. You've enabled some plugins.
+					br
+					| There is a big chance one of them added some stuff to the Settings page.
+					br
+					| Go back there, and check!
+					br
+					i.text-primary Yeah, I have no idea what to do.
+					br
+					| Um, fill the inputs and check the boxes?
+					br
+					i.text-primary Ain't nobody have time for that.
+					br
+					| Why don't you just leave then?
+					br
+					i.text-primary ...I don't know.				
+			.col-md-4
+				img.index-screenshot(src='/img/guide/4.png')
+		br
+		.row
+			.col-md-8
+				h1 Chapter 5: Time for commands!
+				p
+					| You finally configured the basic stuff.
+					br
+					| Now, you can start adding commands!
+					br
+					i.text-primary Um... I guess it's the Commands page then?
+					br
+					| My god, you're learning! I didn't think it's ever going to happen!
+					br
+					i.text-primary So... I should put a command name here. !rank it is!
+					br
+					b I TAKE THAT BACK. 
+					| ARE YOU FUCKING BLIND? THERE IS A FUCKING RED TEXT OVER THERE.
+					br
+					i.text-primary Heh. I can't read.
+					br
+					| AAAAAAAAAARHGHGHGHGHGHG.
+					br
+					| Just... try to understand the concept. You don't put the prefix here.
+					br
+					| Someday, you may need to change the prefix from an exclamation mark.
+					br
+					| Would you prefer changing it in one place or modifying every single command?
+					br
+					i.text-primary Yes.
+					br
+					| Leave.
+					.text-muted.text-small There are currently #{wrongCommands} commands starting with an exclamation mark. Get your shit together, people.
+			.col-md-4
+				img.index-screenshot(src='/img/guide/5.png')
+		br
+		.row
+			.col-md-8
+				h1 Chapter 0: That's it folks!
+				p
+					| That's everything for now, be ready for the upcoming features tho!
+					br
+					i.text-primary No.
+					br
+					| I swear to God, I'm going to struggle you.
+					br
+					i.text-primary Come at me, bro.
+					br
+					| Grr. -.-

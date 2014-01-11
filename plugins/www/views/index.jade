@@ -87,7 +87,7 @@ block content
 						param(name='flashvars', value='hostname=www.twitch.tv&channel=#{featuredChannel.display_name}&auto_play=true&start_volume=25')
 				if Object.keys(streams).length > 1
 					.col-md-12
-						h3 Other Streams
+						h3 Other Streams using Mikuia
 					each stream, channel in streams
 						if stream.channel.display_name != featuredChannel.display_name
 							.col-md-3(style='font-size: 16px;')
