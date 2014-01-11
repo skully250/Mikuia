@@ -4,6 +4,7 @@ if !isAjax
 		head
 			title Mikuia
 			link(rel='stylesheet', href='/css/bootstrap.min.css')
+			link(rel='stylesheet', href='/css/font-awesome.min.css')
 			link(rel='stylesheet', href='/css/mikuia.css')
 			script(type='text/javascript', src='//code.jquery.com/jquery-1.10.2.min.js')
 			script(type='text/javascript', src='/js/bootstrap.min.js')
@@ -31,9 +32,13 @@ if !isAjax
 							li
 								a(href='/') Home
 							li
-								a(href='http://github.com/Maxorq/Mikuia', target='_blank') GitHub
+								a(href='http://github.com/Maxorq/Mikuia', target='_blank')
+									i.fa.fa-github-alt
+									|  GitHub
 							li
-								a(href='https://www.paypal.com/us/cgi-bin/webscr?cmd=_flow&SESSION=UJcSEznYnWYQs43fdIq7ZWu8wTpRozCBV1FQbYCGQu2YHxGmguDEsOrv3Tq&dispatch=5885d80a13c0db1f8e263663d3faee8def8934b92a630e40b7fef61ab7e9fe63', target='_blank') Donate
+								a(style='color: #47D1FF; text-shadow: 0px 0px 10px #99E6FF;', href='https://www.paypal.com/us/cgi-bin/webscr?cmd=_flow&SESSION=UJcSEznYnWYQs43fdIq7ZWu8wTpRozCBV1FQbYCGQu2YHxGmguDEsOrv3Tq&dispatch=5885d80a13c0db1f8e263663d3faee8def8934b92a630e40b7fef61ab7e9fe63', target='_blank')
+									i.fa.fa-money
+									|  Donate
 						ul.nav.navbar-nav.navbar-right
 							if !user
 								li
