@@ -1,7 +1,5 @@
 var app, async, connect, express, Mikuia, passport, passportIo, redis, RedisStore, request, twitch, _
 
-var changelog
-
 exports.manifest = {
 	name: 'www',
 	fullName: 'Website',
@@ -248,11 +246,32 @@ exports.init = function(m) {
 	}
 
 	routes.index = function(req, res) {
-		redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
+		async.parallel({
+			github: function(callback) {
+				request({
+					url: 'https://api.github.com/repos/Maxorq/Mikuia/commits',
+					headers: {
+						'User-Agent': 'Mikuia'
+					}
+				}, function(error, response, body) {
+					if(!error && response.statusCode == 200) {
+						callback(null, JSON.parse(body))
+					} else {
+						callback(error, null)
+					}
+				})
+			},
+			redis: function(callback) {
+				redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
+					callback(err, data)
+				})
+			}
+		}, function(err, results) {
 			res.render('index', {
-				changelog: changelog,
-				channels: data,
-				featuredChannel: Mikuia.channels['#' + data[data.length - 2].toLowerCase()]
+				changelog: results.github.splice(0, 14),
+				channels: results.redis,
+				featuredChannel: Mikuia.channels['#' + results.redis[results.redis.length - 2].toLowerCase()],
+				streams: Mikuia.streams
 			})
 		})
 		redis.smembers('channels', function(err, data) {
@@ -302,16 +321,5 @@ exports.init = function(m) {
 	})
 
 	app.listen(5587)
-
-	request({
-		url: 'https://api.github.com/repos/Maxorq/Mikuia/commits',
-		headers: {
-			'User-Agent': 'Mikuia'
-		}
-	}, function(error, response, body) {
-		if(!error && response.statusCode == 200) {
-			changelog = JSON.parse(body)
-		}
-	})
 
 }

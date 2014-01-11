@@ -50,6 +50,7 @@ var Mikuia = new function() {
 	this.settings = {
 		plugins: {}
 	}
+	this.streams = {}
 
 	this.handleMessage = function(from, channel, message) {
 		var self = this
@@ -94,17 +95,6 @@ var Mikuia = new function() {
 				break
 		}
 		console.log(moment().format('HH:mm:ss') + ' [' + color(status) + '] ' + message)
-	}
-
-	this.derp = function() {
-		var self = this
-		async.each(self.enabled.osu, function(channel, callback) {
-			if(self.channels[channel].plugins.osu.settings) {
-				if(self.channels[channel].plugins.osu.settings.events) {
-					console.log(self.channels[channel].plugins.osu.settings.name)
-				}
-			}
-		})
 	}
 
 	this.say = function(target, message) {
@@ -293,8 +283,10 @@ function refreshViewers() {
 				if(stream.req.res.body.stream != null) {
 					console.log(stream.req.res.body.stream)
 					Mikuia.channels['#' + channel].display_name = stream.req.res.body.stream.channel.display_name
+					Mikuia.streams['#' + channel] = stream.req.res.body.stream
 					redis.zadd('viewers', stream.req.res.body.stream.viewers, channel)
 				} else {
+					delete Mikuia.streams['#' + channel]
 					redis.zrem('viewers', channel)
 				}
 			})
