@@ -29,6 +29,7 @@ var Mikuia = new function() {
 	this.enabled = {}
 	this.hooks = {
 		'1m': [],
+		'5m': [],
 		'chat': [],
 		'enable': []
 	}
@@ -206,6 +207,10 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 setInterval(function() {
 	Mikuia.runHooks('1m')
 }, 60000)
+
+setInterval(function() {
+	Mikuia.runHooks('5m')
+}, 300000)
 
 function initTwitch() {
 	client = new irc.Client('irc.twitch.tv', Mikuia.settings.plugins.base.name, {
