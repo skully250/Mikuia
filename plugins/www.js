@@ -239,13 +239,21 @@ exports.init = function(m) {
 
 	var routes = {}
 
+	routes.channels = function(req, res) {
+		res.render('channels')
+	}
+
 	routes.commands = function(req, res) {
 		res.render('commands')
 	}
 
 	routes.index = function(req, res) {
-		res.render('index', {
-			changelog: changelog
+		redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
+			res.render('index', {
+				changelog: changelog,
+				channels: data,
+				featuredChannel: Mikuia.channels['#' + data[data.length - 2].toLowerCase()]
+			})
 		})
 		redis.smembers('channels', function(err, data) {
 			console.log(data)
@@ -272,6 +280,8 @@ exports.init = function(m) {
 
 	app.get('/', routes.index)
 	app.get('/ajax/', routes.index)
+	app.get('/channels', ensureAuthenticated, routes.channels)
+	app.get('/ajax/channels', ensureAuthenticated, routes.channels)
 	app.get('/commands', ensureAuthenticated, routes.commands)
 	app.get('/ajax/commands', ensureAuthenticated, routes.commands)
 	app.get('/settings', ensureAuthenticated, routes.settings)

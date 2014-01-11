@@ -111,6 +111,8 @@ var Mikuia = new function() {
 		})
 	}
 
+	this.getViewers = getViewers
+
 	this.joinChannel = function(channelName) {
 		var self = this
 		client.join('#' + channelName, function(nick, message) {
@@ -125,10 +127,13 @@ var Mikuia = new function() {
 		})
 	}
 
+	this.refreshViewers = refreshViewers
+
 	this.update = function(channelName) {
 		var self = this
 		self.channels['#' + channelName] = {
 			commands: {},
+			display_name: channelName,
 			plugins: {}
 		}
 		redis.smembers('channel:' + channelName + ':plugins', function(err2, plugins) {
@@ -213,6 +218,7 @@ setInterval(function() {
 
 setInterval(function() {
 	Mikuia.runHooks('5m')
+	refreshViewers()
 }, 300000)
 
 function initTwitch() {
@@ -258,6 +264,33 @@ function initTwitch() {
 	client.on('message#', function(nick, to, text, message) {
 		Mikuia.handleMessage(nick, to, text)
 		Mikuia.log(Mikuia.LogStatus.Normal, '(' + cli.greenBright(to) + ') ' + cli.yellowBright(nick) + ': ' + cli.whiteBright(text))
+	})
+
+	refreshViewers()
+}
+
+function getViewers(callback) {
+	redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
+		callback(err, data)
+	})
+}
+
+function refreshViewers() {
+	redis.smembers('channels', function(err, channels) {
+		async.each(channels, function(channel, callback) {
+			twitch._get('streams/' + channel, function(err, stream) {
+				if(stream.req.res.body.stream != null) {
+					console.log(stream.req.res.body.stream)
+					Mikuia.channels['#' + channel].display_name = stream.req.res.body.stream.channel.display_name
+					redis.zadd('viewers', stream.req.res.body.stream.viewers, stream.req.res.body.stream.channel.display_name)
+				} else {
+					redis.zrem('viewers', Mikuia.channels['#' + channel].display_name)
+				}
+			})
+			callback()
+		}, function(err) {
+			// eh
+		})
 	})
 }
 

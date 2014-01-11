@@ -20,6 +20,33 @@ block content
 			.col-md-4
 				br
 				img.index-screenshot(src='/img/mikuia.png')
+	if channels.length > 0
+		.jumbotron
+			.container
+				.col-md-6	
+					object#live_embed_player_flash(type='application/x-shockwave-flash', height='300', width='500', data='http://www.twitch.tv/widgets/live_embed_player.swf?channel=#{featuredChannel.display_name}')
+						param(name='allowFullScreen', value='true')
+						param(name='allowScriptAccess', value='always')
+						param(name='allowNetworking', value='all')
+						param(name='movie', value='http://www.twitch.tv/widgets/live_embed_player.swf')
+						param(name='flashvars', value='hostname=www.twitch.tv&channel=#{featuredChannel.display_name}&auto_play=true&start_volume=25')
+					b=featuredChannel.display_name
+					|  is using Mikuia! 
+					.badge.badge-danger
+						i.fa.fa-user(style='color: red;')
+						- var viewers = channels[channels.length - 1]
+						|  #{viewers}
+					h4
+						if Object.keys(featuredChannel.commands).length > 0
+							b Commands: 
+							each command, commandName in featuredChannel.commands
+								| #{commandName} 
+						if Object.keys(featuredChannel.plugins).length > 0
+							b Plugins: 
+							each plugin, pluginName in featuredChannel.plugins
+								| #{pluginName} 
+				.col-md-6
+					iframe#chat_embed(frameborder='0', scrolling='no', src='http://twitch.tv/chat/embed?channel=#{featuredChannel.display_name}&popout_chat=true', width='500', height='500')
 	.container
 		.col-md-6
 			h2
@@ -50,11 +77,12 @@ block content
 				| Customize your experience.
 		.col-md-6
 			h2 Changelog
-			each commit in changelog
-				abbr.timeago(title=commit.commit.committer.date)
-				|  - 
-				a(href=commit.html_url) #{commit.commit.message}
-				br
+			if changelog != undefined
+				each commit in changelog
+					abbr.timeago(title=commit.commit.committer.date)
+					|  - 
+					a(href=commit.html_url) #{commit.commit.message}
+					br
 block footerScript
 	script(type='text/javascript')
 		$('[rel="tooltip"]').tooltip()
