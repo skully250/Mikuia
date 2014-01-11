@@ -25,11 +25,7 @@ exports.handleCommand = function(command, tokens, from, channel) {
 
 exports.init = function(m) {
 	Mikuia = m
-	var Twitchy = require('twitchy')
-	twitch = new Twitchy({
-		key: Mikuia.settings.plugins.base.clientID,
-		secret: Mikuia.settings.plugins.base.clientSecret
-	})
+	twitch = Mikuia.modules.twitch
 	twitch.auth(function(err, token) {
 		if(!err) {
 			console.log('Authed with token ' + token)

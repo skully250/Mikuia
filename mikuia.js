@@ -7,12 +7,14 @@ var osuapi = require('./osuapi')
 var redis = require('redis').createClient()
 var repl = require('repl')
 var request = require('request')
+var Twitchy = require('twitchy')
 var _ = require('underscore')
 _.str = require('underscore.string')
 _.mixin(_.str.exports())
 _.str.include('Underscore.string', 'string')
 
 var client
+var twitch
 
 var Mikuia = new function() {
 	
@@ -41,6 +43,7 @@ var Mikuia = new function() {
 		moment: moment,
 		redis: redis,
 		request: request,
+		twitch: twitch
 		_: _
 	}
 	this.plugins = {}
@@ -220,6 +223,11 @@ function initTwitch() {
 		password: Mikuia.settings.plugins.base.password
 	})
 
+	twitch = new Twitchy({
+		key: Mikuia.settings.plugins.base.clientID,
+		secret: Mikuia.settings.plugins.base.clientSecret
+	})
+
 	Mikuia.log(Mikuia.LogStatus.Normal, 'Connecting to Twitch IRC...')
 
 	client.on('motd', function(motd) {
@@ -239,44 +247,6 @@ function initTwitch() {
 				}
 			})
 		})
-		// fs.readdir('channels', function(err, files) {
-		// 	if(err) {
-		// 		Mikuia.log(Mikuia.LogStatus.Fatal, 'Can\'t access "channels" directory.')
-		// 	} else {
-		// 		Mikuia.log(Mikuia.LogStatus.Normal, 'Found ' + cli.greenBright(files.length) + ' channels.')
-		// 	}
-		// 	async.each(files, function readChannelInfo(fileName, callback) {
-		// 		fs.readFile('channels/' + fileName, {encoding: 'utf8'}, function(err, data) {
-		// 			if(err) {
-		// 				Mikuia.log(Mikuia.LogStatus.Error, 'There was an error reading ' + fileName + ' (' + err + ')')
-		// 			} else {
-		// 				data = JSON.parse(data)
-		// 				if(!_.isEmpty(data.twitch)) {
-		// 					Mikuia.channels['#' + data.twitch.toLowerCase()] = data
-		// 					_.each(data.plugins, function(value, key) {
-		// 						if(key in Mikuia.plugins) {
-		// 							Mikuia.enabled[key].push('#' + data.twitch.toLowerCase())
-		// 						}
-		// 					})
-		// 					client.join('#' + data.twitch.toLowerCase(), function(nick, message) {
-		// 						Mikuia.log(Mikuia.LogStatus.Success, 'Joined #' + cli.greenBright(data.twitch) + ' on Twitch IRC.')
-		// 						_.each(data.plugins, function(value, key) {
-		// 							if(key in Mikuia.plugins) {
-		// 								Mikuia.plugins[key].load('#' + data.twitch.toLowerCase())
-		// 							}
-		// 						})
-		// 					})
-		// 				}
-		// 			}
-		// 			callback(err)
-		// 		})
-
-		// 	}, function readChannelDirEnd(err) {
-		// 		if(err) {
-		// 			throw err
-		// 		}
-		// 	})
-		// })
 	})
 
 	client.on('message#', function(nick, to, text, message) {
