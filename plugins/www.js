@@ -281,10 +281,14 @@ exports.init = function(m) {
 				})
 			}
 		}, function(err, results) {
+			var featuredChannel = {}
+			if(results.redis.length > 0) {
+				featuredChannel = Mikuia.channels['#' + results.redis[results.redis.length - 2].toLowerCase()]
+			}
 			res.render('index', {
 				changelog: results.github.splice(0, 14),
 				channels: results.redis,
-				featuredChannel: Mikuia.channels['#' + results.redis[results.redis.length - 2].toLowerCase()],
+				featuredChannel: featuredChannel,
 				streams: Mikuia.streams
 			})
 		})
