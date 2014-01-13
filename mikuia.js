@@ -280,17 +280,19 @@ function refreshViewers() {
 	redis.smembers('channels', function(err, channels) {
 		async.each(channels, function(channel, callback) {
 			twitch._get('streams/' + channel, function(err, stream) {
-				if(stream.req.res.body.stream != null) {
-					console.log(stream.req.res.body.stream)
-					Mikuia.channels['#' + channel].display_name = stream.req.res.body.stream.channel.display_name
-					Mikuia.streams['#' + channel] = stream.req.res.body.stream
-					redis.zadd('viewers', stream.req.res.body.stream.viewers, channel)
-				} else {
-					delete Mikuia.streams['#' + channel]
-					redis.zrem('viewers', channel)
+				if(!err && stream.req.res.body != undefined) {
+					if(stream.req.res.body.stream != null) {
+						console.log(stream.req.res.body.stream)
+						Mikuia.channels['#' + channel].display_name = stream.req.res.body.stream.channel.display_name
+						Mikuia.streams['#' + channel] = stream.req.res.body.stream
+						redis.zadd('viewers', stream.req.res.body.stream.viewers, channel)
+					} else {
+						delete Mikuia.streams['#' + channel]
+						redis.zrem('viewers', channel)
+					}
 				}
+				callback(err)
 			})
-			callback()
 		}, function(err) {
 			// eh
 		})
