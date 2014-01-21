@@ -3,23 +3,35 @@ extends layout
 block content
 	.jumbotron(style='margin-top: -60px;')
 		.container
-			.col-md-8
-				h1
-					| Mikuia
-					span(style='font-size: 24px;')
-						|  for 
-						a(href='http://twitch.tv') Twitch.tv
-				p
-					| You stream games. We make the experience better. Open-source.
+			.row
+				.col-md-8
+					h1
+						| Mikuia
+						span(style='font-size: 24px;')
+							|  for 
+							a(href='http://twitch.tv') Twitch.tv
+					p
+						| You stream games. We make the experience better. Open-source.
+						br
+						small Supports:
+						br
+						img.index-supported-img(src='/img/plugins/osu.png', rel='tooltip', data-toggle='tooltip', title='osu!')
+						br
+						.text-muted.text-small It'll get better. I promise.
+						br
+				.col-md-4
 					br
-					small Supports:
-					br
-					img.index-supported-img(src='/img/plugins/osu.png', rel='tooltip', data-toggle='tooltip', title='osu!')
-					br
-					.text-muted.text-small It'll get better. I promise.
-			.col-md-4
-				br
-				img.index-screenshot(src='/img/mikuia.png')
+					img.index-screenshot(src='/img/mikuia.png')
+			.row
+				.col-md-12
+					.btn-group.btn-group-justified
+						if !user
+							a.noajax(href='/auth/twitch').btn.btn-primary.btn-lg Login to use Mikuia!
+						else
+							a(href='/settings').btn.btn-primary.btn-lg Start using Mikuia!
+						a(href='https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=psqmaxor%40gmail%2ecom&lc=GB&item_name=Mikuia&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted', target='_blank').btn.btn-success.btn-lg Donate!
+						a(href='https://github.com/Maxorq/Mikuia/issues?labels=Bug&page=1&state=open', target='_blank').btn.btn-danger.btn-lg Report bugs!
+						a(href='https://github.com/Maxorq/Mikuia/issues?labels=Feature+Request&page=1&state=open', target='_blank').btn.btn-warning.btn-lg Request features!
 	.container
 		.col-md-6
 			h2
