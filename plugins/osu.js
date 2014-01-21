@@ -7,6 +7,7 @@ var Mikuia
 var osu
 var _
 
+var lastRequest = {}
 var userData = {}
 
 exports.manifest = {
@@ -47,12 +48,19 @@ exports.manifest = {
 			},
 			name: {
 				name: 'Username',
+				default: '',
 				description: 'Your osu! username.',
 				type: 'text'
 			},
 			requests: {
 				description: 'Pass all map links through osu! chat (requests without a command).',
 				type: 'radio'
+			},
+			requestLimit: {
+				name: 'Request limit (in minutes)',
+				default: 0,
+				description: 'How often can a person request',
+				type: 'text'
 			}
 		},
 		server: {
@@ -76,10 +84,20 @@ function checkForMap(from, channel, message, callback) {
 }
 
 function sendRequest(channel, from, map, link) {
-	var escapedArtist = map.artist.split('(').join('{').split(')').join('}')
-	var escapedTitle = map.title.split('(').join('{').split(')').join('}')
-	var escapedVersion = map.version.split('(').join('{').split(')').join('}')
-	bancho.say(Mikuia.channels[channel].plugins.osu.settings.name, 'New request from ' + from + ': (' + escapedArtist + ' - ' + escapedTitle + ' [' + escapedVersion + '])[http://' + link + ']')
+	var areWeSending = true
+	if(Mikuia.channels[channel].plugins.osu.settings.requestLimit) {
+		if(lastRequest[from] && (new Date).getTime() < lastRequest[from] + Mikuia.channels[channel].plugins.osu.settings.requestLimit * 60000) {
+			areWeSending = false
+		} else {
+			lastRequest[from] = (new Date).getTime()
+		}
+	}
+	if(areWeSending) {
+		var escapedArtist = map.artist.split('(').join('{').split(')').join('}')
+		var escapedTitle = map.title.split('(').join('{').split(')').join('}')
+		var escapedVersion = map.version.split('(').join('{').split(')').join('}')
+		bancho.say(Mikuia.channels[channel].plugins.osu.settings.name, 'New request from ' + from + ': (' + escapedArtist + ' - ' + escapedTitle + ' [' + escapedVersion + '])[http://' + link + ']')
+	}
 }
 
 function showInfo(channel, map) {
@@ -209,8 +227,7 @@ exports.runHook = function(hookName) {
 
 									if(diff > 0) {
 										Mikuia.say(channel, '+' + diff + 'pp!')
-										Mikuia.log(Mikuia.LogStatus.Normal, 
-		cli.greenBright(Mikuia.channels[channel].plugins.osu.settings.name) + ' gained ' + cli.yellowBright('+' + diff + 'pp') + '.')
+										Mikuia.log(Mikuia.LogStatus.Normal, cli.greenBright(Mikuia.channels[channel].plugins.osu.settings.name) + ' gained ' + cli.yellowBright('+' + diff + 'pp') + '.')
 									} else {
 										Mikuia.say(channel, diff + 'pp!')
 									}
