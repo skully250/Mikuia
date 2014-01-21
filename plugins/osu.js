@@ -23,6 +23,15 @@ exports.manifest = {
 					optional: true
 				}
 			}
+		},
+		'osu.request': {
+			description: 'Sends a map request through Bancho.',
+			arguments: {
+				'link': {
+					description: 'Beatmap difficulty/set link',
+					optional: false
+				}
+			}
 		}
 	},
 	hooks: ['1m', 'chat', 'enable'],
@@ -42,7 +51,7 @@ exports.manifest = {
 				type: 'text'
 			},
 			requests: {
-				description: 'Send requests through osu! chat.',
+				description: 'Pass all map links through osu! chat (requests without a command).',
 				type: 'radio'
 			}
 		},
@@ -52,6 +61,47 @@ exports.manifest = {
 			password: 'IRC_PASSWORD_HERE_YOU_GET_AN_IDEA'
 		}
 	}
+}
+
+function checkForMap(from, channel, message, callback) {
+	if(/osu.ppy.sh\/(b|s)\/(\d+)/g.test(message)) {
+		var results = /osu.ppy.sh\/(b|s)\/(\d+)/g.exec(message)
+		var response = {}
+		var status = ""
+		Mikuia.log(Mikuia.LogStatus.Normal, 'Getting info for ' + cli.greenBright('/' + results[1] + '/' + results[2]))
+		osu.getBeatmap(results[2], results[1], function(err, map) {
+			callback(err, map, results[0])
+		})
+	}
+}
+
+function sendRequest(channel, from, map, link) {
+	var escapedArtist = map.artist.split('(').join('{').split(')').join('}')
+	var escapedTitle = map.title.split('(').join('{').split(')').join('}')
+	var escapedVersion = map.version.split('(').join('{').split(')').join('}')
+	bancho.say(Mikuia.channels[channel].plugins.osu.settings.name, 'New request from ' + from + ': (' + escapedArtist + ' - ' + escapedTitle + ' [' + escapedVersion + '])[http://' + link + ']')
+}
+
+function showInfo(channel, map) {
+	var status
+	switch(map.approved) {
+		case "-2":
+			status = "Graveyard"
+			break
+		case "-1":
+			status = "WIP"
+			break
+		case "0":
+			status = "Pending"
+			break
+		case "1":
+			status = "Ranked"
+			break
+		case "2":
+			status = "Approved"
+			break
+	}
+	Mikuia.say(channel, '[' + status + '] ' + map.artist + ' - ' + map.title + ' - [' + map.version + '] (by ' + map.creator + '), ' + Math.round(map.bpm) + ' BPM, ' + (Math.round(map.difficultyrating * 100) / 100) + ' stars')
 }
 
 exports.handleCommand = function(command, tokens, from, channel) {
@@ -72,48 +122,35 @@ exports.handleCommand = function(command, tokens, from, channel) {
 					}
 				})
 			}
+			break;
+		case 'osu.request':
+			if(!_.isUndefined(tokens[1])) {
+				checkForMap(from, channel, tokens[1], function(err, map, link) {
+					if(!err) {
+						sendRequest(channel, from, map, link)
+						if(Mikuia.channels[channel].plugins.osu.settings.info) {
+							showInfo(channel, map)
+						}
+					}
+				})
+			}
+			break;
 	}
 }
 
 exports.handleMessage = function(from, channel, message) {
 	if(Mikuia.channels[channel].plugins.osu.settings) {
 		if(Mikuia.channels[channel].plugins.osu.settings.info || Mikuia.channels[channel].plugins.osu.settings.requests) {
-			if(/osu.ppy.sh\/(b|s)\/(\d+)/g.test(message)) {
-				var results = /osu.ppy.sh\/(b|s)\/(\d+)/g.exec(message)
-				var response = {}
-				var status = ""
-				Mikuia.log(Mikuia.LogStatus.Normal, 'Getting info for ' + cli.greenBright('/' + results[1] + '/' + results[2]))
-				osu.getBeatmap(results[2], results[1], function(err, map) {
-					if(!err) {
-						switch(map.approved) {
-							case "-2":
-								status = "Graveyard"
-								break
-							case "-1":
-								status = "WIP"
-								break
-							case "0":
-								status = "Pending"
-								break
-							case "1":
-								status = "Ranked"
-								break
-							case "2":
-								status = "Approved"
-								break
-						}
-						if(Mikuia.channels[channel].plugins.osu.settings.info) {
-							Mikuia.say(channel, '[' + status + '] ' + map.artist + ' - ' + map.title + ' - [' + map.version + '] (by ' + map.creator + '), ' + Math.round(map.bpm) + ' BPM, ' + (Math.round(map.difficultyrating * 100) / 100) + ' stars')
-						}
-						if(Mikuia.channels[channel].plugins.osu.settings.requests) {
-							var escapedArtist = map.artist.split('(').join('{').split(')').join('}')
-							var escapedTitle = map.title.split('(').join('{').split(')').join('}')
-							var escapedVersion = map.version.split('(').join('{').split(')').join('}')
-							bancho.say(Mikuia.channels[channel].plugins.osu.settings.name, 'New request from ' + from + ': (' + escapedArtist + ' - ' + escapedTitle + ' [' + escapedVersion + '])[http://' + results[0] + ']')
-						}
+			checkForMap(from, channel, message, function(err, map, link) {
+				if(!err) {
+					if(Mikuia.channels[channel].plugins.osu.settings.requests) {
+						sendRequest(channel, from, map, link)
 					}
-				})
-			}
+					if(Mikuia.channels[channel].plugins.osu.settings.info) {
+						showInfo(channel, map)
+					}
+				}
+			})
 		}
 	}
 }
