@@ -18,24 +18,24 @@ block content
 								td=plugin.manifest.description
 								td
 									- if(installed.indexOf(plugin.manifest.name) == -1) 
-										button.btn.btn-xs.btn-success(id="plugin_#{plugin.manifest.name}", onclick="io.emit('plugin.enable', { plugin: '#{plugin.manifest.name}' })") Enable
+										button.btn.btn-xs.btn-danger(id="plugin_#{plugin.manifest.name}", onclick="io.emit('plugin.enable', { plugin: '#{plugin.manifest.name}' })") Disabled
 									- else 
-										button.btn.btn-xs.btn-danger(id="plugin_#{plugin.manifest.name}", onclick="io.emit('plugin.disable', { plugin: '#{plugin.manifest.name}' })") Disable
+										button.btn.btn-xs.btn-success(id="plugin_#{plugin.manifest.name}", onclick="io.emit('plugin.disable', { plugin: '#{plugin.manifest.name}' })") Enabled
 block footerScript
 	script(type='text/javascript').
 		listeners.push('plugin:enable', 'plugin:disable')
 
 		function enable(plugin) {
-			$('#plugin_' + plugin).removeClass('btn-success')
-			$('#plugin_' + plugin).addClass('btn-danger')
-			$('#plugin_' + plugin).html('Disable')
+			$('#plugin_' + plugin).removeClass('btn-danger')
+			$('#plugin_' + plugin).addClass('btn-success')
+			$('#plugin_' + plugin).html('Enabled')
 			$('#plugin_' + plugin).attr('onclick', "io.emit('plugin.disable', { plugin: '" + plugin + "' })")
 		}
 
 		function disable(plugin) {
-			$('#plugin_' + plugin).removeClass('btn-danger')
-			$('#plugin_' + plugin).addClass('btn-success')
-			$('#plugin_' + plugin).html('Enable')
+			$('#plugin_' + plugin).removeClass('btn-success')
+			$('#plugin_' + plugin).addClass('btn-danger')
+			$('#plugin_' + plugin).html('Disabled')
 			$('#plugin_' + plugin).attr('onclick', "io.emit('plugin.enable', { plugin: '" + plugin + "' })")
 		}
 
