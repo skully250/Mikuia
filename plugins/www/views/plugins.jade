@@ -41,8 +41,10 @@ block footerScript
 
 		io.on('plugin:enable', function(data) {
 			enable(data.plugin)
+			flashNavbar('success', 'Successfully enabled ' + data.plugin + '.')
 		})
 
 		io.on('plugin:disable', function(data) {
 			disable(data.plugin)
+			flashNavbar('success', 'Successfully disabled ' + data.plugin + '.')
 		})

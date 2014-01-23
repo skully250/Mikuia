@@ -1,3 +1,4 @@
+var flashTimeout
 var listeners = []
 
 var io = io.connect()
@@ -47,5 +48,18 @@ $(function() {
 			replacePage('/ajax' + History.getState().hash)
 		}
 	})
-
 })
+
+function flashNavbar(type, alert) {
+	$('.navbar-content').hide()
+	$('.navbar').addClass('navbar-' + type)
+	$('.navbar-alert').html('<span class="navbar-brand">' + alert + '</span>')
+	$('.navbar-alert').fadeIn('fast')
+	clearTimeout(flashTimeout)
+	flashTimeout = setTimeout(function() {
+		$('.navbar-alert').fadeOut('fast')
+		$('.navbar-content').fadeIn('fast')
+		$('.navbar').removeClass('navbar-' + type)
+		$('.navbar-alert').html('')
+	}, 2000)
+}

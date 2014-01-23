@@ -102,6 +102,7 @@ block footerScript
 		io.on('settings:plugin:save', function(data) {
 			if(data.reply == 'OK') {
 				$('#plugin_' + data.plugin + '_save').removeClass('btn-primary').html('Saved!')
+				flashNavbar('success', 'Settings for ' + plugins[data.plugin].fullName + ' have been saved!')
 				setTimeout(function() {
 					$('#plugin_' + data.plugin + '_save').addClass('btn-primary').html('Save')
 				}, 3000)
