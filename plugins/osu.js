@@ -118,6 +118,9 @@ function showInfo(channel, map) {
 		case "2":
 			status = "Approved"
 			break
+		case "3":
+			status = "Qualified"
+			break
 	}
 	Mikuia.say(channel, '[' + status + '] ' + map.artist + ' - ' + map.title + ' - [' + map.version + '] (by ' + map.creator + '), ' + Math.round(map.bpm) + ' BPM, ' + (Math.round(map.difficultyrating * 100) / 100) + ' stars')
 }
