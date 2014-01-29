@@ -246,6 +246,7 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 			rollbar.init(Mikuia.settings.plugins.base.rollbarToken)
 			rollbar.handleUncaughtExceptions(Mikuia.settings.plugins.base.rollbarToken, { exitOnCaughtException: false })
 			fs.writeFileSync('settings.json', JSON.stringify(Mikuia.settings, null, '\t'))
+			Mikuia.runHooks('1m')
 		})
 	})
 })
@@ -296,7 +297,7 @@ function initTwitch() {
 					callback()
 				}, function loadChannelsEnd(err) {
 					if(err) {
-						throw err
+						Mikuia.log(Mikuia.LogStatus.Error, 'One of the channels failed to load.')
 					}
 				})
 			} else {
