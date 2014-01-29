@@ -34,32 +34,9 @@ block content
 						a(href='https://github.com/Maxorq/Mikuia/issues?labels=Feature+Request&page=1&state=open', target='_blank').btn.btn-warning.btn-lg Request features!
 	.container
 		.col-md-6
-			h2
-				.glyphicon.glyphicon-send
-				|  Game Events
-			p
-				| Realtime event notifications.
-				br
-				| Rank changes, level results, match stats.
-				br
-				| Put the info in the chat for viewers, get it through Steam, save it somewhere.
-				br
-			h2
-				.glyphicon.glyphicon-stats
-				|  Chat Utilities
-			p
-				| Commands for checking ranks, points, and levels.
-				br
-				| Let your viewers check stats with a command instead of asking repeatedly.
-			h2
-				.glyphicon.glyphicon-flash
-				|  Plugin API
-			p
-				| Nearly every single feature is a part of a plugin.
-				br
-				| Add, delete, enable, disable plugins you want to.
-				br
-				| Customize your experience.
+			a.twitter-timeline(href='https://twitter.com/MikuiaTwitch', data-widget-id='428660017936343040') Twwweets.
+			script(type='text/javascript').
+				!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
 		.col-md-6
 			h2 Latest Commits
 			if changelog != undefined
