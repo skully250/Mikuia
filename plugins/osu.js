@@ -252,6 +252,8 @@ exports.runHook = function(hookName) {
 
 								userData[user.username].pp = user.pp_raw
 								userData[user.username].rank = user.pp_rank
+							} else {
+								Mikuia.log(Mikuia.LogStatus.Warning, 'osu! - Failed to update profile of ' + channel + ' (' + Mikuia.channels[channel].plugins.osu.settings.name + ').')
 							}
 							callback(err)
 						})
@@ -263,7 +265,7 @@ exports.runHook = function(hookName) {
 				}
 			}, function(err) {
 				if(err) {
-					throw err
+					Mikuia.log(Mikuia.LogStatus.Error, 'osu! - One of the profile updates failed.')
 				}
 				//console.log(userData)
 			})
