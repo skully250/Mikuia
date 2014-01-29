@@ -26,6 +26,7 @@ exports.init = function(m) {
 	redis = Mikuia.modules.redis
 	RedisStore = require('connect-redis')(connect)
 	request = require('request')
+	rollbar = Mikuia.modules.rollbar
 	twitch = require('passport-twitchtv').Strategy
 	_ = Mikuia.modules._
 	app = express()
@@ -88,6 +89,8 @@ exports.init = function(m) {
 	})
 	app.use(app.router)
 	app.use(express.static(__dirname + '/www/public'))
+
+	app.use(rollbar.errorHandler(Mikuia.settings.plugins.base.rollbackToken))
 
 	app.io.route('ready', function(req) {
 		//console.log(req.handshake.user)
@@ -319,6 +322,7 @@ exports.init = function(m) {
 	app.get('/ajax/', routes.index)
 	app.get('/channels', routes.channels)
 	app.get('/ajax/channels', routes.channels)
+	app.get('/channels', routes.channels)
 	app.get('/commands', ensureAuthenticated, routes.commands)
 	app.get('/ajax/commands', ensureAuthenticated, routes.commands)
 	app.get('/guide', routes.guide)
@@ -338,6 +342,10 @@ exports.init = function(m) {
 	app.get('/logout', function(req, res) {
 		req.logout()
 		res.redirect('/')
+	})
+
+	app.get('/alive', function(req, res) {
+		res.send('Yes.')
 	})
 
 	app.listen(5587)

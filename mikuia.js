@@ -7,6 +7,7 @@ var osuapi = require('./osuapi')
 var redis = require('redis').createClient()
 var repl = require('repl')
 var request = require('request')
+var rollbar = require('rollbar')
 var Twitchy = require('twitchy')
 var _ = require('underscore')
 _.str = require('underscore.string')
@@ -43,6 +44,7 @@ var Mikuia = new function() {
 		moment: moment,
 		redis: redis,
 		request: request,
+		rollbar: rollbar,
 		twitch: twitch,
 		_: _
 	}
@@ -51,6 +53,10 @@ var Mikuia = new function() {
 		plugins: {}
 	}
 	this.streams = {}
+
+	this.handleError = function(message) {
+		rollbar.reportMessage(message)
+	}
 
 	this.handleMessage = function(from, channel, message) {
 		var self = this
@@ -95,6 +101,9 @@ var Mikuia = new function() {
 				break
 		}
 		console.log(moment().format('HH:mm:ss') + ' [' + color(status) + '] ' + message)
+		if(status == this.LogStatus.Error || status == this.LogStatus.Fatal) {
+			this.handleError(message)
+		}
 	}
 
 	this.say = function(target, message) {
@@ -105,9 +114,10 @@ var Mikuia = new function() {
 		var self = this
 		async.each(this.hooks[hookName], function runHook(pluginName, callback) {
 			self.plugins[pluginName].runHook(hookName)
+			callback()
 		}, function hookRunEnd(err) {
 			if(err) {
-				throw err
+				self.log(self.LogStatus.Error, 'Failed to run hook ' + hookName + '.')
 			}
 		})
 	}
@@ -137,29 +147,51 @@ var Mikuia = new function() {
 			display_name: channelName,
 			plugins: {}
 		}
-		redis.smembers('channel:' + channelName + ':plugins', function(err2, plugins) {
+		redis.smembers('channel:' + channelName + ':plugins', function(err, plugins) {
+			if(err) {
+				self.log(self.LogStatus.Error, 'Failed to get a list of plugins for ' + channelName + '.')
+			}
 			_.each(plugins, function(pluginName) {
 				self.channels['#' + channelName].plugins[pluginName] = {}
-				redis.get('channel:' + channelName + ':plugin:' + pluginName + ':settings', function(err3, settings) {
-					self.channels['#' + channelName].plugins[pluginName].settings = JSON.parse(settings)
-					if(self.enabled[pluginName].indexOf('#' + channelName) == -1) {
-						self.enabled[pluginName].push('#' + channelName)
-						if(self.hooks.enable.indexOf(pluginName) > -1) {
-							self.plugins[pluginName].load('#' + channelName)
+				redis.get('channel:' + channelName + ':plugin:' + pluginName + ':settings', function(err2, settings) {
+					if(err2) {
+						self.log(self.LogStatus.Error, 'Failed to get a settings for plugin ' + pluginName + ' for channel ' + channelName + '.')
+					} else {
+						try {
+							self.channels['#' + channelName].plugins[pluginName].settings = JSON.parse(settings)
+						} catch(e) {
+							self.log(self.LogStatus.Error, 'Failed to parse settings for plugin ' + pluginName + ' for channel ' + channelName + '.')
+						}
+						if(self.enabled[pluginName].indexOf('#' + channelName) == -1) {
+							self.enabled[pluginName].push('#' + channelName)
+							if(self.hooks.enable.indexOf(pluginName) > -1) {
+								self.plugins[pluginName].load('#' + channelName)
+							}
 						}
 					}
 				})
 			})
 		})
-		redis.smembers('channel:' + channelName + ':commands', function(err2, commands) {
-			_.each(commands, function(commandName) {
-				redis.get('channel:' + channelName + ':command:' + commandName, function(err3, command) {
-					self.channels['#' + channelName].commands[commandName] = JSON.parse(command)
+		redis.smembers('channel:' + channelName + ':commands', function(err, commands) {
+			if(err) {
+				self.log(self.LogStatus.Error, 'Failed to get commands for channel ' + channelName + '.')
+			} else {
+				_.each(commands, function(commandName) {
+					redis.get('channel:' + channelName + ':command:' + commandName, function(err2, command) {
+						if(err2) {
+							self.log(self.LogStatus.Error, 'Failed to get info for command ' + commandName + ' for channel ' + channelName + '.')
+						} else {
+							try {
+								self.channels['#' + channelName].commands[commandName] = JSON.parse(command)
+							} catch(e) {
+								self.log(self.LogStatus.Error, 'Failed to parse JSON info for command ' + commandName + ' for channel ' + channelName + '.')
+							}
+						}
+					})
 				})
-			})
+			}
 		})
 	}
-
 }
 
 Mikuia.log(Mikuia.LogStatus.Normal, 'Starting up Mikuia...')
@@ -168,7 +200,11 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 	if(err) {
 		Mikuia.log(Mikuia.LogStatus.Warning, 'Settings file doesn\'t exist, will create a default one.')
 	} else {
-		Mikuia.settings = JSON.parse(data)
+		try {
+			Mikuia.settings = JSON.parse(data)
+		} catch(e) {
+			Mikuia.log(Mikuia.LogStatus.Error, 'Failed to parse setting JSON file')
+		}
 	}
 	fs.readdir('plugins', function(err, files) {
 		if(err) {
@@ -202,12 +238,13 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 				Mikuia.plugins[plugin.manifest.name] = plugin
 			}
 			callback()
-
 		}, function loadPluginEnd(err) {
 			if(err) {
-				throw err
+				Mikuia.log(Mikuia.LogStatus.Error, 'One of the plugins failed to load.')
 			}
 			initTwitch()
+			rollbar.init(Mikuia.settings.plugins.base.rollbarToken)
+			rollbar.handleUncaughtExceptions(Mikuia.settings.plugins.base.rollbarToken, { exitOnCaughtException: false })
 			fs.writeFileSync('settings.json', JSON.stringify(Mikuia.settings, null, '\t'))
 		})
 	})
@@ -237,7 +274,9 @@ function initTwitch() {
 
 	twitch.auth(function(err, token) {
 		if(!err) {
-			console.log('Authed with token ' + token)
+			Mikuia.log(Mikuia.LogStatus.Success, 'Authed to Twitch with token: ' + token)
+		} else {
+			Mikuia.log(Mikuia.LogStatus.Error, 'Failed to auth to Twitch.')
 		}
 	})
 
@@ -250,15 +289,19 @@ function initTwitch() {
 	client.on('registered', function(message) {
 		Mikuia.log(Mikuia.LogStatus.Success, 'Connected to Twitch IRC.')
 		redis.smembers('channels', function(redisErr, channels) {
-			async.each(channels, function loadChannel(channelName, callback) {
-				Mikuia.joinChannel(channelName)
-				Mikuia.update(channelName)
-				callback()
-			}, function loadChannelsEnd(err) {
-				if(err) {
-					throw err
-				}
-			})
+			if(!redisErr) {
+				async.each(channels, function loadChannel(channelName, callback) {
+					Mikuia.joinChannel(channelName)
+					Mikuia.update(channelName)
+					callback()
+				}, function loadChannelsEnd(err) {
+					if(err) {
+						throw err
+					}
+				})
+			} else {
+				Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get channel list from Redis.')
+			}
 		})
 	})
 
@@ -272,30 +315,41 @@ function initTwitch() {
 
 function getViewers(callback) {
 	redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
+		if(err) {
+			Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get viewer list from Redis.')
+		}
 		callback(err, data)
 	})
 }
 
 function refreshViewers() {
 	redis.smembers('channels', function(err, channels) {
-		async.each(channels, function(channel, callback) {
-			twitch._get('streams/' + channel, function(err, stream) {
-				if(!err && stream.req.res.body != undefined) {
-					if(stream.req.res.body.stream != null) {
-						console.log(stream.req.res.body.stream)
-						Mikuia.channels['#' + channel].display_name = stream.req.res.body.stream.channel.display_name
-						Mikuia.streams['#' + channel] = stream.req.res.body.stream
-						redis.zadd('viewers', stream.req.res.body.stream.viewers, channel)
+		if(err) {
+			Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get channel list from Redis for refreshing viewers.')
+		} else {
+			async.each(channels, function(channel, callback) {
+				twitch._get('streams/' + channel, function(err, stream) {
+					if(!err && stream.req.res.body != undefined) {
+						if(stream.req.res.body.stream != null) {
+							//console.log(stream.req.res.body.stream)
+							Mikuia.channels['#' + channel].display_name = stream.req.res.body.stream.channel.display_name
+							Mikuia.streams['#' + channel] = stream.req.res.body.stream
+							redis.zadd('viewers', stream.req.res.body.stream.viewers, channel)
+						} else {
+							delete Mikuia.streams['#' + channel]
+							redis.zrem('viewers', channel)
+						}
 					} else {
-						delete Mikuia.streams['#' + channel]
-						redis.zrem('viewers', channel)
+						Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get a stream (' + channel + ').')
 					}
+					callback(err)
+				})
+			}, function(err) {
+				if(err) {
+					Mikuia.log(Mikuia.LogStatus.Error, 'One of the streams failed to refresh viewers.')
 				}
-				callback(err)
 			})
-		}, function(err) {
-			// eh
-		})
+		}
 	})
 }
 

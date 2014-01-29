@@ -17,6 +17,9 @@ exports.handleCommand = function(command, tokens, from, channel) {
 	switch(command) {
 		case 'twitch.viewers':
 			twitch._get('streams/' + channel.replace('#', ''), function(err, stream) {
+				if(err) {
+					Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get viewer count for ' + channel.replace('#', '') + '.')
+				}
 				Mikuia.say(channel, stream.req.res.body.stream.viewers + ' viewers.')
 			})
 			break

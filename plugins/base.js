@@ -27,7 +27,8 @@ exports.manifest = {
 			password: 'OAUTH_HASH_HERE',
 			clientID: 'API_CLIENT_ID',
 			clientSecret: 'API_CLIENT_SECRET',
-			callbackURL: 'http://localhost:5587/auth/twitch/callback'
+			callbackURL: 'http://localhost:5587/auth/twitch/callback',
+			rollbarToken: 'ROLLBAR_SERVER_SIDE_TOKEN_HERE'
 		}
 	}
 }
