@@ -21,12 +21,30 @@ block content
 
 block footerScript
 	script(type='text/javascript').
-		listeners.push('commands', 'commands:add', 'commands:remove')
+		listeners.push('commands', 'commands:add', 'commands:remove', 'commands:save')
 		var commands = {}
 
 		function removeCommand(command) {
 			io.emit('commands.remove', {
 				name: command
+			})
+		}
+
+		function save(command, name) {
+			var settings = {}
+			for(var settingKey in commands[command].settings) {
+				switch(commands[command].settings[settingKey].type) {
+					case 'radio':
+						settings[settingKey] = $('#command_' + name + '_settings_' + settingKey).prop('checked')
+						break
+					case 'text':
+						settings[settingKey] = $('#command_' + name + '_settings_' + settingKey).val()
+						break
+				}
+			}
+			io.emit('commands.save', {
+				name: name,
+				settings: settings
 			})
 		}
 
@@ -49,6 +67,7 @@ block footerScript
 							<small class="text-muted">' + data.command + ' - ' + commands[data.command].description + ' \
 								<ul id="command_' + data.name + '_arguments"></ul> \
 							</small> \
+							<br /> \
 							<button type="button" onclick="removeCommand(\'' + data.name + '\')" class="btn btn-danger btn-xs pull-right">Remove</button> \
 						</div>  \
 					</div> \
@@ -64,7 +83,48 @@ block footerScript
 					$('#command_' + data.name + '_arguments').append('<b>' + argumentKey + '</b> - ' + argument.description)
 				}
 			}
+			if(commands[data.command].settings != undefined) {
+				if(data.settings != undefined) {
+					var settings = data.settings
+				} else {
+					var settings = {}
+				}
+				$('#command_' + data.name + ' .panel-body small').append('Settings:<br />')
+				for(var settingKey in commands[data.command].settings) {
+					var setting = commands[data.command].settings[settingKey]
+					var id = 'command_' + data.name + '_settings_' + settingKey
+					switch(setting.type) {
+						case 'radio':
+							$('#command_' + data.name + ' .panel-body small').append(
+								'<label><input class="form-control" type="checkbox" name="' + id + '" id="' + id + '"> ' + setting.description + '</label><br /> \
+							')
+							break
+						case 'text':
+							var value = ""
+							if(settings[settingKey] != undefined) {
+								value = settings[settingKey]
+							}
+							$('#command_' + data.name + ' .panel-body small').append(
+								'<div class="input-group"> \
+									<span class="input-group-addon">' + setting.name + '</span> \
+									<input class="form-control" type="text" name="' + id + '" id="' + id + '" placeholder="' + setting.description + '" value="' + value + '"></span><br /> \
+								</div>')
+							break
+					}
+				}
+				$('#command_' + data.name + ' .panel-body button').before('<button type="button" onclick="save(\'' + data.command + '\', \'' + data.name + '\')" class="btn btn-primary btn-xs pull-right" id="command_' + data.name + '_save">Save</button>')
+			}
 			$('#command_' + data.name).fadeIn('slow')
+		})
+
+		io.on('commands:save', function(data) {
+			if(data.reply == 'OK') {
+				$('#command_' + data.command + '_save').removeClass('btn-primary').html('Saved!')
+				flashNavbar('success', 'Settings for ' + data.command + ' command have been saved!')
+				setTimeout(function() {
+					$('#command_' + data.command + '_save').addClass('btn-primary').html('Save')
+				}, 3000)
+			}
 		})
 
 		io.on('commands:remove', function(data) {

@@ -186,6 +186,17 @@ var Mikuia = new function() {
 							} catch(e) {
 								self.log(self.LogStatus.Error, 'Failed to parse JSON info for command ' + commandName + ' for channel ' + channelName + '.')
 							}
+							redis.get('channel:' + channelName + ':command:' + commandName + ':settings', function(err3, settings) {
+								if(err3) {
+									self.log(self.LogStatus.Error, 'Failed to get settings for command ' + commandName + ' for channel ' + channelName + '.')
+								} else {
+									try {
+										self.channels['#' + channelName].commands[commandName].settings = JSON.parse(settings)
+									} catch(e) {
+										self.log(self.LogStatus.Error, 'Failed to parse JSON settings for command ' + commandName + ' for channel ' + channelName + '.')
+									}
+								}
+							})
 						}
 					})
 				})

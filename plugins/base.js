@@ -7,6 +7,16 @@ exports.manifest = {
 	description: 'Provides basic commands.',
 	type: 'channel',
 	commands: {
+		'dummy': {
+			description: 'Static text.',
+			settings: {
+				'text': {
+					description: 'Text to use.',
+					name: 'Text',
+					type: 'text'
+				}
+			}
+		},
 		'mikuia.about': {
 			description: 'Shows some info about Mikuia.'
 		},
@@ -35,6 +45,9 @@ exports.manifest = {
 
 exports.handleCommand = function(command, tokens, from, channel) {
 	switch(command) {
+		case 'dummy':
+			Mikuia.say(channel, Mikuia.channels[channel].commands[tokens[0]].settings.text)
+			break
 		case 'mikuia.about':
 			Mikuia.say(channel, 'Hey, I\'m Mikuia, and I\'m a bot! Learn more about me at http://statpoint.info:5587/')
 			break

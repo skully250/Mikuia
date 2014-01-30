@@ -119,6 +119,16 @@ exports.init = function(m) {
 		})
 	})
 
+	app.io.route('commands.save', function(req) {
+		redis.set('channel:' + req.handshake.user.username + ':command:' + req.data.name + ':settings', JSON.stringify(req.data.settings), function(err, reply) {
+			req.io.emit('commands:save', {
+				command: req.data.name,
+				reply: reply
+			})
+			Mikuia.update(req.handshake.user.username)
+		})
+	})
+
 	app.io.route('getCommands', function(req) {
 		redis.smembers('channel:' + req.handshake.user.username + ':plugins', function(err, reply) {
 			var commands = {}
@@ -136,9 +146,19 @@ exports.init = function(m) {
 				_.each(reply2, function(command) {
 					redis.get('channel:' + req.handshake.user.username + ':command:' + command, function(err3, reply3) {
 						var data = JSON.parse(reply3)
-						req.io.emit('commands:add', {
-							name: command,
-							command: data.command
+						redis.get('channel:' + req.handshake.user.username + ':command:' + command + ':settings', function(err4, reply4) {
+							var settings = {}
+							try {
+								settings = JSON.parse(reply4)
+							} catch(e) {
+								console.log(e)
+							}
+							req.io.emit('commands:add', {
+								name: command,
+								command: data.command,
+								settings: settings
+							})
+
 						})
 					})
 				})
