@@ -90,7 +90,7 @@ exports.init = function(m) {
 	app.use(app.router)
 	app.use(express.static(__dirname + '/www/public'))
 
-	app.use(rollbar.errorHandler(Mikuia.settings.plugins.base.rollbackToken))
+	app.use(rollbar.errorHandler(Mikuia.settings.plugins.base.rollbarToken))
 
 	app.io.route('ready', function(req) {
 		//console.log(req.handshake.user)
