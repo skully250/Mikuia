@@ -69,7 +69,7 @@ block content
 					a(href=commit.html_url) #{commit.commit.message}
 					br
 	br
-	if channels.length > 0
+	if channels.length > 0 && featuredChannel != undefined
 		.jumbotron
 			.container
 				.col-md-8	
