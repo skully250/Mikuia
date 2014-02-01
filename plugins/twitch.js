@@ -1,5 +1,4 @@
 var Mikuia
-var twitch
 
 exports.manifest = {
 	name: 'twitch',
@@ -13,14 +12,20 @@ exports.manifest = {
 	}
 }
 
+exports.omg = function() {
+	console.log(Mikuia.modules.twitch)
+}
+
 exports.handleCommand = function(command, tokens, from, channel) {
 	switch(command) {
 		case 'twitch.viewers':
-			twitch._get('streams/' + channel.replace('#', ''), function(err, stream) {
+			Mikuia.modules.twitch._get('streams/' + channel.replace('#', ''), function(err, stream) {
 				if(err) {
 					Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get viewer count for ' + channel.replace('#', '') + '.')
 				}
-				Mikuia.say(channel, stream.req.res.body.stream.viewers + ' viewers.')
+				if(stream.req.res.body.stream != undefined) {
+					Mikuia.say(channel, stream.req.res.body.stream.viewers + ' viewers.')
+				}
 			})
 			break
 	}
@@ -28,5 +33,4 @@ exports.handleCommand = function(command, tokens, from, channel) {
 
 exports.init = function(m) {
 	Mikuia = m
-	twitch = Mikuia.modules.twitch
 }

@@ -279,10 +279,12 @@ function initTwitch() {
 		password: Mikuia.settings.plugins.base.password
 	})
 
-	twitch = new Twitchy({
+	Mikuia.modules.twitch = new Twitchy({
 		key: Mikuia.settings.plugins.base.clientID,
 		secret: Mikuia.settings.plugins.base.clientSecret
 	})
+
+	twitch = Mikuia.modules.twitch
 
 	twitch.auth(function(err, token) {
 		if(!err) {
