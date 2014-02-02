@@ -33,6 +33,7 @@ exports.manifest = {
 	settings: {
 		server: {
 			admin: 'ADMIN_NAME_HERE',
+			redisPassword: 'YES_PASSWORD_HEREEE',
 			name: 'TWITCH_NAME_HERE',
 			password: 'OAUTH_HASH_HERE',
 			clientID: 'API_CLIENT_ID',

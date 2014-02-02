@@ -223,7 +223,7 @@ exports.runHook = function(hookName) {
 				if(Mikuia.channels[channel].plugins.osu.settings) {
 					if(Mikuia.channels[channel].plugins.osu.settings.events) {
 						osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, function(err, user) {
-							if(!err && !_.isEmpty(user) && !_.isUndefined(userData) && userData[user.username].pp != 0) {
+							if(!err && !_.isEmpty(user) && !_.isUndefined(userData[user.username]) && userData[user.username].pp != 0) {
 								if(userData[user.username].pp != user.pp_raw) {
 									var diff = Math.round((user.pp_raw - userData[user.username].pp) * 100) / 100
 									var rnk = user.pp_rank - userData[user.username].rank

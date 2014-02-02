@@ -4,7 +4,7 @@ var fs = require('fs')
 var irc = require('irc')
 var moment = require('moment')
 var osuapi = require('./osuapi')
-var redis = require('redis').createClient()
+var Redis = require('redis')
 var repl = require('repl')
 var request = require('request')
 var rollbar = require('rollbar')
@@ -15,6 +15,7 @@ _.mixin(_.str.exports())
 _.str.include('Underscore.string', 'string')
 
 var client
+var redis
 var twitch
 
 var Mikuia = new function() {
@@ -216,6 +217,10 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 		} catch(e) {
 			Mikuia.log(Mikuia.LogStatus.Error, 'Failed to parse setting JSON file')
 		}
+		Mikuia.modules.redis = Redis.createClient(6379, '127.0.0.1', {
+			auth_pass: Mikuia.settings.plugins.base.redisPassword
+		})
+		redis = Mikuia.modules.redis
 	}
 	fs.readdir('plugins', function(err, files) {
 		if(err) {
