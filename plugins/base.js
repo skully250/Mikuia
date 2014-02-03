@@ -47,7 +47,9 @@ exports.manifest = {
 exports.handleCommand = function(command, tokens, from, channel) {
 	switch(command) {
 		case 'dummy':
-			Mikuia.say(channel, Mikuia.channels[channel].commands[tokens[0]].settings.text)
+			if(Mikuia.channels[channel].commands[tokens[0]] != undefined) {
+				Mikuia.say(channel, Mikuia.channels[channel].commands[tokens[0]].settings.text)
+			}
 			break
 		case 'mikuia.about':
 			Mikuia.say(channel, 'Hey, I\'m Mikuia, and I\'m a bot! Learn more about me at http://statpoint.info:5587/')

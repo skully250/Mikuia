@@ -8,10 +8,11 @@ var osu = function(key) {
 osu.prototype.getBeatmap = function(beatmapId, type, callback) {
 	request('http://osu.ppy.sh/api/get_beatmaps?k=' + this.key + '&' + type + '=' + beatmapId, function(error, response, body) {
 		if(!error) {
+			var err
 			try {
 				var json = JSON.parse(body)
 			} catch(e) {
-				Mikuia.log(Mikuia.LogStatus.Error, 'osu - Failed to parse /' + type + '/' + beatmapId + ' JSON.')
+				
 			}
 			if(json != undefined) {
 				var maxRating = 0
@@ -25,11 +26,10 @@ osu.prototype.getBeatmap = function(beatmapId, type, callback) {
 				//console.log(json)
 				callback(false, json[select])
 			} else {
-				callback(true, {})
+				callback(true, 'osu - Failed to parse /' + type + '/' + beatmapId + ' JSON.')
 			}
 		} else {
-			Mikuia.log(Mikuia.LogStatus.Error, 'osu - Failed to get /' + type + '/' + beatmapId + ' JSON.')
-			callback(true, {})
+			callback(true, 'osu - Failed to get /' + type + '/' + beatmapId + ' JSON.')
 		}
 	})
 }
@@ -40,16 +40,15 @@ osu.prototype.getUser = function(user, callback) {
 			try {
 				var json = JSON.parse(body)[0]
 			} catch(e) {
-				Mikuia.log(Mikuia.LogStatus.Error, 'osu - Failed to parse /u/' + user + ' JSON.')
+				console.log('D:')
 			}
 			if(json != undefined) {
 				callback(false, json)
 			} else {
-				callback(true, {})
+				callback(true, 'osu - Failed to parse /u/' + user + ' JSON.')
 			}
 		} else {
-			Mikuia.log(Mikuia.LogStatus.Error, 'osu - Failed to get /u/' + user + ' JSON.')
-			callback(true, {})
+			callback(true, 'osu - Failed to get /u/' + user + ' JSON.')
 		}
 	})
 }
