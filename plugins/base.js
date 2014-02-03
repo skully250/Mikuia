@@ -52,7 +52,7 @@ exports.handleCommand = function(command, tokens, from, channel) {
 			}
 			break
 		case 'mikuia.about':
-			Mikuia.say(channel, 'Hey, I\'m Mikuia, and I\'m a bot! Learn more about me at http://statpoint.info:5587/')
+			Mikuia.say(channel, 'Hey, I\'m Mikuia, and I\'m a bot! Learn more about me at http://mikuia.tv/')
 			break
 		case 'mikuia.channels':
 			if(from == Mikuia.settings.plugins.base.admin.toLowerCase()) {

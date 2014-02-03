@@ -85,7 +85,7 @@ function checkForMap(from, channel, message, callback) {
 
 function sendRequest(channel, from, map, link) {
 	var areWeSending = true
-	if(Mikuia.channels[channel].plugins.osu.settings.requestLimit) {
+	if(Mikuia.channels[channel].plugins.osu.settings != undefined && Mikuia.channels[channel].plugins.osu.settings != null && Mikuia.channels[channel].plugins.osu.settings.requestLimit) {
 		if(lastRequest[from] && (new Date).getTime() < lastRequest[from] + Mikuia.channels[channel].plugins.osu.settings.requestLimit * 60000) {
 			areWeSending = false
 		} else {
@@ -237,7 +237,7 @@ exports.runHook = function(hookName) {
 
 									if(rnk > 0) {
 										Mikuia.say(channel, 'Rank: #' + user.pp_rank + ' (' + rnk +' down)')
-									} else {
+									} else if(rnk < 0) {
 										Mikuia.say(channel, 'Rank: #' + user.pp_rank + ' (' + Math.abs(rnk) +' up!)')
 									}
 								}
