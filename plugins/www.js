@@ -375,6 +375,12 @@ exports.init = function(m) {
 		res.send('Yes.')
 	})
 
+	app.post('/post', function(req, res) {
+		Mikuia.log(Mikuia.LogStatus.Normal, 'Incoming played track!')
+		console.log(req.body)
+		res.send(200)
+	})
+
 	app.listen(5587)
 
 }
