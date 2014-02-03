@@ -133,9 +133,10 @@ block footerScript
 								break
 							case 'text':
 								$('#plugin_' + plugin.name + ' .panel-body').append(
-									'<label for="' + id + '">' + setting.name + '</label> \
-									<input type="text" name="' + id + '" id="' + id + '" placeholder="' + setting.description + '" value="' + setting.default + '" ><br /> \
-								')
+									'<div class="input-group"> \
+									<span class="input-group-addon">' + setting.name + '</span> \
+									<input class="form-control" type="text" name="' + id + '" id="' + id + '" placeholder="' + setting.description + '" value="' + setting.default + '"></span><br /> \
+								</div>')
 								break
 						}
 					}
