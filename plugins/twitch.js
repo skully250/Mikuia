@@ -9,7 +9,8 @@ exports.manifest = {
 		'twitch.viewers': {
 			description: 'Shows the current viewer count.'
 		}
-	}
+	},
+	settings: {}
 }
 
 exports.omg = function() {
