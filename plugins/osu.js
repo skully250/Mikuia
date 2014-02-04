@@ -3,10 +3,12 @@ var osuapi = require('../osuapi')
 var async
 var bancho
 var cli
+var limiter
 var Mikuia
 var osu
 var _
 
+var banchoRateLimiter
 var lastRequest = {}
 var userData = {}
 
@@ -85,8 +87,9 @@ function checkForMap(from, channel, message, callback) {
 
 function sendRequest(channel, from, map, link) {
 	var areWeSending = true
-	if(Mikuia.channels[channel].plugins.osu.settings != undefined && Mikuia.channels[channel].plugins.osu.settings != null && Mikuia.channels[channel].plugins.osu.settings.requestLimit) {
-		if(lastRequest[from] && (new Date).getTime() < lastRequest[from] + Mikuia.channels[channel].plugins.osu.settings.requestLimit * 60000) {
+	var settings = Mikuia.channels[channel].plugins.osu.settings
+	if(settings != undefined && settings != null && settings.requestLimit) {
+		if(lastRequest[from] && (new Date).getTime() < lastRequest[from] + settings.requestLimit * 60000) {
 			areWeSending = false
 		} else {
 			lastRequest[from] = (new Date).getTime()
@@ -96,7 +99,10 @@ function sendRequest(channel, from, map, link) {
 		var escapedArtist = map.artist.split('(').join('{').split(')').join('}')
 		var escapedTitle = map.title.split('(').join('{').split(')').join('}')
 		var escapedVersion = map.version.split('(').join('{').split(')').join('}')
-		bancho.say(Mikuia.channels[channel].plugins.osu.settings.name, 'New request from ' + from + ': (' + escapedArtist + ' - ' + escapedTitle + ' [' + escapedVersion + '])[http://' + link + ']')
+		banchoRateLimiter.removeTokens(1, function(err, remainingRequests) {
+			bancho.say(settings.name, 'New request from ' + from + ': (' + escapedArtist + ' - ' + escapedTitle + ' [' + escapedVersion + '])[http://' + link + ']')
+			Mikuia.log(Mikuia.LogStatus.Warning, 'osu - Remaining tokens: ' + remainingRequests)
+		})
 	}
 }
 
@@ -183,7 +189,10 @@ exports.init = function(m) {
 	async = Mikuia.modules.async
 	cli = Mikuia.modules.cli
 	irc = Mikuia.modules.irc
+	limiter = Mikuia.modules.limiter
 	_ = Mikuia.modules._
+
+	banchoRateLimiter = new limiter(1, 'second')
 
 	bancho = new irc.Client('cho.ppy.sh', Mikuia.settings.plugins.osu.name, {
 		sasl: true,
