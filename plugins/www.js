@@ -284,20 +284,20 @@ exports.init = function(m) {
 
 	routes.index = function(req, res) {
 		async.parallel({
-			github: function(callback) {
-				request({
-					url: 'https://api.github.com/repos/Maxorq/Mikuia/commits',
-					headers: {
-						'User-Agent': 'Mikuia'
-					}
-				}, function(error, response, body) {
-					if(!error && response.statusCode == 200) {
-						callback(null, JSON.parse(body))
-					} else {
-						callback(error, null)
-					}
-				})
-			},
+			// github: function(callback) {
+			// 	request({
+			// 		url: 'https://api.github.com/repos/Maxorq/Mikuia/commits',
+			// 		headers: {
+			// 			'User-Agent': 'Mikuia'
+			// 		}
+			// 	}, function(error, response, body) {
+			// 		if(!error && response.statusCode == 200) {
+			// 			callback(null, JSON.parse(body))
+			// 		} else {
+			// 			callback(error, null)
+			// 		}
+			// 	})
+			// },
 			redis: function(callback) {
 				redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
 					callback(err, data)
@@ -308,15 +308,15 @@ exports.init = function(m) {
 				Mikuia.log(Mikuia.LogStatus.Error, 'Something went wrong while opening index page.')
 			}
 			var featuredChannel = {}
-			var github = {}
+			//var github = {}
 			if(results.redis.length > 0) {
 				featuredChannel = Mikuia.channels['#' + results.redis[results.redis.length - 2].toLowerCase()]
 			}
-			if(results.github != null) {
-				github = results.github.splice(0, 14)
-			}
+			// if(results.github != null) {
+			// 	github = results.github.splice(0, 14)
+			// }
 			res.render('index', {
-				changelog: github,
+				//changelog: github,
 				channels: results.redis,
 				featuredChannel: featuredChannel,
 				streams: Mikuia.streams
