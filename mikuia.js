@@ -2,6 +2,7 @@ var async = require('async')
 var cli = require('cli-color')
 var fs = require('fs')
 var irc = require('irc')
+var limiter = require('limiter').RateLimiter
 var moment = require('moment')
 var osuapi = require('./osuapi')
 var Redis = require('redis')
@@ -17,6 +18,8 @@ _.str.include('Underscore.string', 'string')
 var client
 var redis
 var twitch
+
+var twitchRateLimit = new limiter(5, 10000)
 
 var Mikuia = new function() {
 	
@@ -42,6 +45,7 @@ var Mikuia = new function() {
 		cli: cli,
 		fs: fs,
 		irc: irc,
+		limiter: limiter,
 		moment: moment,
 		redis: redis,
 		request: request,
@@ -108,7 +112,10 @@ var Mikuia = new function() {
 	}
 
 	this.say = function(target, message) {
-		client.say(target, message)
+		twitchRateLimit.removeTokens(1, function(err, remainingRequests) {
+			client.say(target, message)
+			Mikuia.log(Mikuia.LogStatus.Warning, 'Remaining tokens: ' + remainingRequests)
+		})
 	}
 
 	this.runHooks = function(hookName) {
