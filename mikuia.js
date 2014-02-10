@@ -19,7 +19,7 @@ var client
 var redis
 var twitch
 
-var twitchRateLimit = new limiter(5, 10000)
+var twitchRateLimit = new limiter(20, 30000)
 
 var Mikuia = new function() {
 	
