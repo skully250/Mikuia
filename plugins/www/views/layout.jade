@@ -1,5 +1,5 @@
 if !isAjax
-	!!!5
+	doctype html
 	html
 		head
 			title Mikuia
@@ -34,6 +34,10 @@ if !isAjax
 									i.fa.fa-home
 									|  Home
 							li
+								a(href='http://statpoint.info:9001')
+									i.fa.fa-users
+									|  Forums
+							li
 								a(href='/guide')
 									i.fa.fa-book
 									|  Guide
@@ -46,6 +50,7 @@ if !isAjax
 									i.fa.fa-money
 									|  Donate
 						ul.nav.navbar-nav.navbar-right
+							console.log(user)
 							if !user
 								li
 									a.noajax(href='/auth/twitch') Login with Twitch

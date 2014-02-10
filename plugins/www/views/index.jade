@@ -1,7 +1,7 @@
 extends layout
 
 block content
-	.jumbotron(style='margin-top: -60px;')
+	.jumbotron(style='margin-top: -60px; margin-bottom: 0px;')
 		.container
 			.row
 				.col-md-8
@@ -23,22 +23,16 @@ block content
 					br
 					img.index-screenshot(src='/img/mikuia.png')
 			.row
-				.col-md-12
+				.col-md-3
 					.btn-group.btn-group-justified
 						if !user
 							a.noajax(href='/auth/twitch').btn.btn-primary.btn-lg Login to use Mikuia!
 						else
 							a(href='/settings').btn.btn-primary.btn-lg Start using Mikuia!
-						a(href='https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=psqmaxor%40gmail%2ecom&lc=GB&item_name=Mikuia&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted', target='_blank').btn.btn-success.btn-lg Donate!
-						a(href='https://github.com/Maxorq/Mikuia/issues?labels=Bug&page=1&state=open', target='_blank').btn.btn-danger.btn-lg Report bugs!
-						a(href='https://github.com/Maxorq/Mikuia/issues?labels=Feature+Request&page=1&state=open', target='_blank').btn.btn-warning.btn-lg Request features!
-	.container(style='width:100%; background-color: red; height: 24px; text-align: center; color: white;')
-		| Something fucking up? Spam the shit out of me! 
-		b Hatsuney 
-		| on Twitch, 
-		b Maxorq 
-		| pretty much everywhere, and 
-		b psqmaxor@gmail.com!
+	.container(style='width:100%; background-color: darkRed; text-align: center; color: white; padding: 5px;')
+		a(href='http://statpoint.info:9001/', style='color: white;')
+			h1 DAMN! We have forums!
+			h3 Click here and visit them now!
 	.container
 		.col-md-6
 			h2
@@ -69,7 +63,7 @@ block content
 				| Customize your experience.
 		.col-md-6
 			h2 Latest Commits
-			| Derp.
+			| Derp. GitHub temporarily disabled here.
 			//- if changelog != undefined
 			//- 	each commit in changelog
 			//- 		abbr.timeago(title=commit.commit.committer.date)
@@ -80,7 +74,7 @@ block content
 	if channels.length > 0 && featuredChannel != undefined
 		.jumbotron
 			.container
-				.col-md-8	
+				.col-md-8
 					h1
 						| #{featuredChannel.display_name}
 						span(style='font-size: 24px;')
@@ -119,6 +113,6 @@ block content
 										i.fa.fa-user(style='color: red;')
 										|  #{stream.viewers}
 block footerScript
-	script(type='text/javascript')
+	script(type='text/javascript').
 		$('[rel="tooltip"]').tooltip()
 		$('abbr.timeago').timeago()
