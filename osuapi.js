@@ -2,7 +2,7 @@ var limiter = require('limiter')
 var request = require('request')
 var _ = require('underscore')
 
-var apiRateLimiter = new limiter.RateLimiter(60, 'minute')
+var apiRateLimiter = new limiter.RateLimiter(120, 'minute')
 
 var osu = function(key) {
 	this.key = key
