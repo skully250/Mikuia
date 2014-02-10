@@ -322,9 +322,6 @@ exports.init = function(m) {
 				streams: Mikuia.streams
 			})
 		})
-		redis.smembers('channels', function(err, data) {
-			console.log(data)
-		})
 	}
 
 	routes.plugins = function(req, res) {
