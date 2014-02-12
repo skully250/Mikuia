@@ -62,6 +62,15 @@ exports.manifest = {
 					optional: false
 				}
 			}
+		},
+		'osu.tp.rank': {
+			description: 'Shows a osu!tp rank of a player.',
+			arguments: {
+				'username': {
+					description: 'Username to check.',
+					optional: true
+				}
+			}
 		}
 	},
 	hooks: ['1m', 'chat', 'enable'],
@@ -191,7 +200,7 @@ exports.handleCommand = function(command, tokens, from, channel) {
 					}
 				})
 			}
-			break;
+			break
 		case 'osu.request':
 			if(!_.isUndefined(tokens[1])) {
 				checkForMap(from, channel, tokens[1], function(err, map, link) {
@@ -203,7 +212,37 @@ exports.handleCommand = function(command, tokens, from, channel) {
 					}
 				})
 			}
-			break;
+			break
+		case 'osu.tp.rank':
+			if(!_.isUndefined(tokens[1])) {
+				tokens.splice(0, 1)
+				var user = tokens.join(' ')
+			} else {
+				if(Mikuia.channels[channel].plugins.osu.settings) {
+					var user = Mikuia.channels[channel].plugins.osu.settings.name
+				}
+			}
+			if(user != undefined) {
+
+				var continueTp = function(userId, username) {
+					osu.getTpUser(userId, function(err, user) {
+						if(!err && !_.isEmpty(user)) {
+							Mikuia.say(channel, 'osu!tp stats for ' + username + ': ' + user.rating + 'tp, rank: #' + user.rank + '\nAim: ' + user.aimrating + ' Spd: ' + user.speedrating + ' Acc: ' + user.accrating)
+						}
+					})
+				}
+
+				if(!_.isUndefined(userData[user])) {
+					continueTp(userData[user].user_id, user)
+				} else {
+					osu.getUser(user, 0, function(err, userJson) {
+						if(!err && !_.isEmpty(userJson)) {
+							continueTp(userJson.user_id, user)
+						}
+					})
+				}
+			}
+			break
 	}
 }
 
@@ -260,6 +299,7 @@ exports.load = function(channel) {
 		osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, 0, function(err, user) {			
 			if(!err && !_.isEmpty(user)) {
 				userData[user.username] = {}
+				userData[user.username].user_id = user.user_id
 				userData[user.username].pp = user.pp_raw
 				userData[user.username].rank = user.pp_rank
 			}

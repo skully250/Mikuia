@@ -3,6 +3,7 @@ var request = require('request')
 var _ = require('underscore')
 
 var apiRateLimiter = new limiter.RateLimiter(120, 'minute')
+var tpRateLimiter = new limiter.RateLimiter(10, 'minute')
 
 var osu = function(key) {
 	this.key = key
@@ -38,6 +39,28 @@ osu.prototype.getBeatmap = function(beatmapId, type, callback) {
 			}
 		})
 		console.log('osu!api tokens left: ' + remainingRequests)
+	})
+}
+
+osu.prototype.getTpUser = function(userId, callback) {
+	var self = this
+	tpRateLimiter.removeTokens(1, function(err, remainingRequests) {
+		request('http://osutp.net/api/get_player.php?u=' + userId, function(error, response, body) {
+			if(!error) {
+				try {
+					var json = JSON.parse(body)[0]
+				} catch(e) {
+					console.log('D:')
+				}
+				if(json != undefined) {
+					callback(false, json)
+				} else {
+					callback(true, 'osu!tp - Failed to parse /u/' + user + ' JSON.')
+				}
+			} else {
+				callback(true, 'osu!tp - Failed to get /u/' + user + ' JSON.')
+			}
+		})
 	})
 }
 
