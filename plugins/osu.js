@@ -75,6 +75,12 @@ exports.manifest = {
 				description: 'Show events and rank changes on chat.',
 				type: 'radio'
 			},
+			minimumRank: {
+				name: 'Minimum event rank',
+				default: 1000,
+				description: 'Minimum rank for song event to show (1-1000)',
+				type: 'text'
+			},
 			name: {
 				name: 'Username',
 				default: '',
@@ -290,7 +296,23 @@ exports.runHook = function(hookName) {
 								if(!_.isEmpty(user.events)) {
 									var newestEvent = new Date(user.events[0].date).getTime() / 1000
 									if(newestEvent > userData[user.username].lastEvent) {
-										Mikuia.say(channel, _.stripTags(user.events[0].display_html).trim())
+										var string = _.stripTags(user.events[0].display_html).trim()
+										var tokens = /.*?(\d+)/.exec(string)
+
+										var minRank = 1000
+
+										if(Mikuia.channels[channel].plugins.osu.settings.minimumRank) {
+											minRank = Mikuia.channels[channel].plugins.osu.settings.minimumRank
+										}
+
+										if(tokens) {
+											if(tokens[1] <= minRank) {
+												Mikuia.say(channel, string)
+											}
+										} else {
+											Mikuia.say(channel, string)
+										}
+
 									}
 									userData[user.username].lastEvent = newestEvent
 								}
