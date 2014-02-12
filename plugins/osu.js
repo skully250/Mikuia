@@ -73,7 +73,7 @@ exports.manifest = {
 			}
 		}
 	},
-	hooks: ['1m', 'chat', 'enable'],
+	hooks: ['10s', '1h', 'chat', 'enable'],
 	settings: {
 		channel: {
 			info: {
@@ -309,12 +309,24 @@ exports.load = function(channel) {
 
 exports.runHook = function(hookName) {
 	switch(hookName) {
-		case '1m':
+		case '10s':
+		case '1h':
 			async.each(Mikuia.enabled.osu, function(channel, callback) {
 
 				// Holy shit, this is going to be a complete hate-fest.
-				if(channel in Mikuia.streams) {
+				var canWeDoIt
+				if(hookName == '10s') {
+					if(channel in Mikuia.streams) {
+						canWeDoIt = true
+					} else {
+						canWeDoIt = false
+					}
+				} else if(hookName == '1h') {
+					canWeDoIt = true
+				}
+
 				// BRACE FOR THE IMPACT
+				if(canWeDoIt) {
 					if(Mikuia.channels[channel].plugins.osu.settings) {
 						if(Mikuia.channels[channel].plugins.osu.settings.events) {
 							osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, 0, function(err, user) {
