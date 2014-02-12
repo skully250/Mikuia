@@ -35,6 +35,7 @@ var Mikuia = new function() {
 	this.commands = {}
 	this.enabled = {}
 	this.hooks = {
+		'10s': [],
 		'1m': [],
 		'5m': [],
 		'chat': [],
@@ -273,6 +274,10 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 		})
 	})
 })
+
+setInterval(function() {
+	Mikuia.runHooks('10s')
+}, 10000)
 
 setInterval(function() {
 	Mikuia.runHooks('1m')
