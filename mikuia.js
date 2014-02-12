@@ -38,6 +38,7 @@ var Mikuia = new function() {
 		'10s': [],
 		'1m': [],
 		'5m': [],
+		'1h': [],
 		'chat': [],
 		'enable': []
 	}
@@ -287,6 +288,10 @@ setInterval(function() {
 	Mikuia.runHooks('5m')
 	refreshViewers()
 }, 300000)
+
+setInterval(function() {
+	Mikuia.runHooks('1h')
+}, 3600000)
 
 function initTwitch() {
 	client = new irc.Client('irc.twitch.tv', Mikuia.settings.plugins.base.name, {
