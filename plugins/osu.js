@@ -290,7 +290,7 @@ exports.runHook = function(hookName) {
 								if(!_.isEmpty(user.events)) {
 									var newestEvent = new Date(user.events[0].date).getTime() / 1000
 									if(newestEvent > userData[user.username].lastEvent) {
-										Mikuia.say(channel, _.stripTags(user.events[0].display_html))
+										Mikuia.say(channel, _.stripTags(user.events[0].display_html).trim())
 									}
 									userData[user.username].lastEvent = newestEvent
 								}
