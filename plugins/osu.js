@@ -19,7 +19,34 @@ exports.manifest = {
 	description: 'Plugin for osu!',
 	commands: {
 		'osu.rank': {
-			description: 'Shows the rank of a player.',
+			description: 'Shows the rank of a player. (osu!)',
+			arguments: {
+				'username': {
+					description: 'Username to check.',
+					optional: true
+				}
+			}
+		},
+		'osu.rank.ctb': {
+			description: 'Shows the rank of a player. (Catch the Beat)',
+			arguments: {
+				'username': {
+					description: 'Username to check.',
+					optional: true
+				}
+			}
+		},
+		'osu.rank.osumania': {
+			description: 'Shows the rank of a player. (osu!mania)',
+			arguments: {
+				'username': {
+					description: 'Username to check.',
+					optional: true
+				}
+			}
+		},
+		'osu.rank.taiko': {
+			description: 'Shows the rank of a player. (Taiko)',
 			arguments: {
 				'username': {
 					description: 'Username to check.',
@@ -134,6 +161,15 @@ function showInfo(channel, map) {
 exports.handleCommand = function(command, tokens, from, channel) {
 	switch(command) {
 		case 'osu.rank':
+		case 'osu.rank.ctb':
+		case 'osu.rank.osumania':
+		case 'osu.rank.taiko':
+			var modes = {
+				'osu.rank': 0,
+				'osu.rank.ctb': 2,
+				'osu.rank.osumania': 3,
+				'osu.rank.taiko': 1
+			}
 			if(!_.isUndefined(tokens[1])) {
 				tokens.splice(0, 1)
 				var user = tokens.join(' ')
@@ -143,7 +179,7 @@ exports.handleCommand = function(command, tokens, from, channel) {
 				}
 			}
 			if(user != undefined) {
-				osu.getUser(user, function(err, user) {
+				osu.getUser(user, modes[command], function(err, user) {
 					if(!err && !_.isEmpty(user)) {
 						Mikuia.say(channel, 'Stats for ' + user.username + ': ' + user.pp_raw + 'pp, rank: #' + user.pp_rank)
 					}
@@ -215,7 +251,7 @@ exports.init = function(m) {
 
 exports.load = function(channel) {
 	if(Mikuia.channels[channel].plugins.osu.settings && Mikuia.channels[channel].plugins.osu.settings.name) {
-		osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, function(err, user) {			
+		osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, 0, function(err, user) {			
 			if(!err && !_.isEmpty(user)) {
 				userData[user.username] = {}
 				userData[user.username].pp = user.pp_raw
@@ -231,7 +267,7 @@ exports.runHook = function(hookName) {
 			async.each(Mikuia.enabled.osu, function(channel, callback) {
 				if(Mikuia.channels[channel].plugins.osu.settings) {
 					if(Mikuia.channels[channel].plugins.osu.settings.events) {
-						osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, function(err, user) {
+						osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, 0, function(err, user) {
 							if(!err && !_.isEmpty(user) && !_.isUndefined(userData[user.username]) && userData[user.username].pp != 0) {
 								if(userData[user.username].pp != user.pp_raw) {
 									var diff = Math.round((user.pp_raw - userData[user.username].pp) * 100) / 100

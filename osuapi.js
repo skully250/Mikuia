@@ -41,10 +41,10 @@ osu.prototype.getBeatmap = function(beatmapId, type, callback) {
 	})
 }
 
-osu.prototype.getUser = function(user, callback) {
+osu.prototype.getUser = function(user, mode, callback) {
 	var self = this
 	apiRateLimiter.removeTokens(1, function(err, remainingRequests) {
-		request('http://osu.ppy.sh/api/get_user?k=' + self.key + '&u=' + user, function(error, response, body) {
+		request('http://osu.ppy.sh/api/get_user?k=' + self.key + '&u=' + user + '&m=' + mode, function(error, response, body) {
 			if(!error) {
 				try {
 					var json = JSON.parse(body)[0]
