@@ -311,59 +311,66 @@ exports.runHook = function(hookName) {
 	switch(hookName) {
 		case '1m':
 			async.each(Mikuia.enabled.osu, function(channel, callback) {
-				if(Mikuia.channels[channel].plugins.osu.settings) {
-					if(Mikuia.channels[channel].plugins.osu.settings.events) {
-						osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, 0, function(err, user) {
-							if(!err && !_.isEmpty(user) && !_.isUndefined(userData[user.username]) && userData[user.username].pp != 0) {
-								if(userData[user.username].pp != user.pp_raw) {
-									var diff = Math.round((user.pp_raw - userData[user.username].pp) * 100) / 100
-									var rnk = user.pp_rank - userData[user.username].rank
 
-									if(diff > 0) {
-										Mikuia.say(channel, '+' + diff + 'pp!')
-										Mikuia.log(Mikuia.LogStatus.Normal, cli.greenBright(Mikuia.channels[channel].plugins.osu.settings.name) + ' gained ' + cli.yellowBright('+' + diff + 'pp') + '.')
-									} else {
-										Mikuia.say(channel, diff + 'pp!')
-									}
+				// Holy shit, this is going to be a complete hate-fest.
+				if(channel in Mikuia.streams) {
+				// BRACE FOR THE IMPACT
+					if(Mikuia.channels[channel].plugins.osu.settings) {
+						if(Mikuia.channels[channel].plugins.osu.settings.events) {
+							osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, 0, function(err, user) {
+								if(!err && !_.isEmpty(user) && !_.isUndefined(userData[user.username]) && userData[user.username].pp != 0) {
+									if(userData[user.username].pp != user.pp_raw) {
+										var diff = Math.round((user.pp_raw - userData[user.username].pp) * 100) / 100
+										var rnk = user.pp_rank - userData[user.username].rank
 
-									if(rnk > 0) {
-										Mikuia.say(channel, 'Rank: #' + user.pp_rank + ' (' + rnk +' down)')
-									} else if(rnk < 0) {
-										Mikuia.say(channel, 'Rank: #' + user.pp_rank + ' (' + Math.abs(rnk) +' up!)')
-									}
-								}
-
-								if(!_.isEmpty(user.events)) {
-									var newestEvent = new Date(user.events[0].date).getTime() / 1000
-									if(newestEvent > userData[user.username].lastEvent) {
-										var string = _.stripTags(user.events[0].display_html).trim()
-										var tokens = /.*?(\d+)/.exec(string)
-
-										var minRank = 1000
-
-										if(Mikuia.channels[channel].plugins.osu.settings.minimumRank) {
-											minRank = Mikuia.channels[channel].plugins.osu.settings.minimumRank
+										if(diff > 0) {
+											Mikuia.say(channel, '+' + diff + 'pp!')
+											Mikuia.log(Mikuia.LogStatus.Normal, cli.greenBright(Mikuia.channels[channel].plugins.osu.settings.name) + ' gained ' + cli.yellowBright('+' + diff + 'pp') + '.')
+										} else {
+											Mikuia.say(channel, diff + 'pp!')
 										}
 
-										if(tokens) {
-											if(tokens[1] <= minRank) {
+										if(rnk > 0) {
+											Mikuia.say(channel, 'Rank: #' + user.pp_rank + ' (' + rnk +' down)')
+										} else if(rnk < 0) {
+											Mikuia.say(channel, 'Rank: #' + user.pp_rank + ' (' + Math.abs(rnk) +' up!)')
+										}
+									}
+
+									if(!_.isEmpty(user.events)) {
+										var newestEvent = new Date(user.events[0].date).getTime() / 1000
+										if(newestEvent > userData[user.username].lastEvent) {
+											var string = _.stripTags(user.events[0].display_html).trim()
+											var tokens = /.*?(\d+)/.exec(string)
+
+											var minRank = 1000
+
+											if(Mikuia.channels[channel].plugins.osu.settings.minimumRank) {
+												minRank = Mikuia.channels[channel].plugins.osu.settings.minimumRank
+											}
+
+											if(tokens) {
+												if(tokens[1] <= minRank) {
+													Mikuia.say(channel, string)
+												}
+											} else {
 												Mikuia.say(channel, string)
 											}
-										} else {
-											Mikuia.say(channel, string)
+
 										}
-
+										userData[user.username].lastEvent = newestEvent
 									}
-									userData[user.username].lastEvent = newestEvent
-								}
 
-								userData[user.username].pp = user.pp_raw
-								userData[user.username].rank = user.pp_rank
-							} else {
-								Mikuia.log(Mikuia.LogStatus.Warning, 'osu! - Failed to update profile of ' + channel + ' (' + Mikuia.channels[channel].plugins.osu.settings.name + ').')
-							}
-							callback(err)
-						})
+									userData[user.username].pp = user.pp_raw
+									userData[user.username].rank = user.pp_rank
+								} else {
+									Mikuia.log(Mikuia.LogStatus.Warning, 'osu! - Failed to update profile of ' + channel + ' (' + Mikuia.channels[channel].plugins.osu.settings.name + ').')
+								}
+								callback(err)
+							})
+						} else {
+							callback()
+						}
 					} else {
 						callback()
 					}
