@@ -18,7 +18,7 @@ if !isAjax
 					padding-top: 60px;
 				}
 		body
-			nav.navbar.navbar-inverse.navbar-fixed-top(role='navigation')
+			nav.navbar.navbar-default.navbar-fixed-top(role='navigation')
 				.container.navbar-content
 					div.navbar-header
 						button.navbar-toggle(type='button', data-toggle='collapse', data-target='navbar-collapse')
@@ -81,6 +81,7 @@ if !isAjax
 			.pull-right
 				| Made by 
 				a(href='http://github.com/Maxorq', target='_blank') Maxorq
+		br
 else
 	block content
 	block footerScript
