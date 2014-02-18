@@ -18,6 +18,7 @@ _.str.include('Underscore.string', 'string')
 var client
 var redis
 var twitch
+var www = require('./www')
 
 var twitchRateLimit = new limiter(10, 30000)
 
@@ -273,6 +274,7 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 			fs.writeFileSync('settings.json', JSON.stringify(Mikuia.settings, null, '\t'))
 			Mikuia.runHooks('10s')
 			Mikuia.runHooks('1h')
+			www.init(Mikuia)
 		})
 	})
 })

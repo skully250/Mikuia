@@ -1,12 +1,5 @@
 var app, async, connect, express, Mikuia, passport, passportIo, redis, RedisStore, request, twitch, _
 
-exports.manifest = {
-	name: 'www',
-	fullName: 'Website',
-	description: 'Oh my god, a website.',
-	type: 'server'
-}
-
 function ensureAuthenticated(req, res, next) {
 	if(req.isAuthenticated()) {
 		return next()
@@ -18,15 +11,15 @@ function ensureAuthenticated(req, res, next) {
 
 exports.init = function(m) {
 	Mikuia = m
-	async = Mikuia.modules.async
+	async = require('async')
 	connect = require('connect')
 	express = require('express.io')
 	passport = require('passport')
 	passportIo = require('passport.socketio')
 	redis = Mikuia.modules.redis
-	RedisStore = require('connect-redis')(connect)
+	RedisStore = require('connect-redis')(express)
 	request = require('request')
-	rollbar = Mikuia.modules.rollbar
+	rollbar = require('rollbar')
 	twitch = require('passport-twitchtv').Strategy
 	_ = Mikuia.modules._
 	app = express()
@@ -70,7 +63,7 @@ exports.init = function(m) {
 		})
 	}))
 
-	app.set('views', __dirname + '/www/views')
+	app.set('views', __dirname + '/views')
 	app.set('view engine', 'jade')
 	app.use(express.logger('dev'))
 	app.use(express.cookieParser())
@@ -88,7 +81,7 @@ exports.init = function(m) {
 		next()
 	})
 	app.use(app.router)
-	app.use(express.static(__dirname + '/www/public'))
+	app.use(express.static(__dirname + '/public'))
 
 	app.use(rollbar.errorHandler(Mikuia.settings.plugins.base.rollbarToken))
 

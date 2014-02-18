@@ -1,5 +1,5 @@
-channels/*.json
 node
 node_modules
+public/*.osk
 settings.json
 *.sh
