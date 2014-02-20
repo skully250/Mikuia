@@ -74,7 +74,8 @@ var Mikuia = new function() {
 
 			if(!_.isUndefined(this.channels[channel].commands[trigger])) {
 				var command = this.channels[channel].commands[trigger].command
-				if(this.channels[channel].plugins[this.commands[command].plugin] != undefined) {
+				var pl = this.channels[channel].plugins[this.commands[command]]
+				if(!_.isUndefined(pl) && !_.isUndefined(pl.plugin)) {
 					this.plugins[this.commands[command].plugin].handleCommand(command, tokens, from, channel)
 				}
 			}

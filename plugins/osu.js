@@ -130,14 +130,18 @@ function checkForMap(from, channel, message, callback) {
 function sendRequest(channel, from, map, link) {
 	var areWeSending = true
 	var settings = Mikuia.channels[channel].plugins.osu.settings
-	if(settings != undefined && settings != null && settings.requestLimit) {
-		if(lastRequest[from] && (new Date).getTime() < lastRequest[from] + settings.requestLimit * 60000) {
-			areWeSending = false
-		} else {
-			lastRequest[from] = (new Date).getTime()
+	if(settings != undefined && settings != null) {
+		if(settings.requestLimit) {
+			if(lastRequest[from] && (new Date).getTime() < lastRequest[from] + settings.requestLimit * 60000) {
+				areWeSending = false
+			} else {
+				lastRequest[from] = (new Date).getTime()
+			}
 		}
+	} else {
+		areWeSending = false
 	}
-	if(areWeSending) {
+	if(areWeSending && !_.isUndefined(map)) {
 		var escapedArtist = map.artist.split('(').join('{').split(')').join('}')
 		var escapedTitle = map.title.split('(').join('{').split(')').join('}')
 		var escapedVersion = map.version.split('(').join('{').split(')').join('}')

@@ -47,8 +47,9 @@ exports.manifest = {
 exports.handleCommand = function(command, tokens, from, channel) {
 	switch(command) {
 		case 'dummy':
-			if(Mikuia.channels[channel].commands[tokens[0]] != undefined) {
-				Mikuia.say(channel, Mikuia.channels[channel].commands[tokens[0]].settings.text)
+			var command = Mikuia.channels[channel].commands[tokens[0]]
+			if(command != undefined && command.settings != null) {
+				Mikuia.say(channel, command.settings.text)
 			}
 			break
 		case 'mikuia.about':

@@ -63,6 +63,7 @@ exports.init = function(m) {
 		})
 	}))
 
+	app.use(express.static(__dirname + '/public'))
 	app.set('views', __dirname + '/views')
 	app.set('view engine', 'jade')
 	app.use(express.logger('dev'))
@@ -81,7 +82,6 @@ exports.init = function(m) {
 		next()
 	})
 	app.use(app.router)
-	app.use(express.static(__dirname + '/public'))
 
 	app.use(rollbar.errorHandler(Mikuia.settings.plugins.base.rollbarToken))
 
