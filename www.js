@@ -1,4 +1,4 @@
-var app, async, connect, express, Mikuia, passport, passportIo, redis, RedisStore, request, twitch, _
+var app, async, connect, express, io, Mikuia, passport, passportIo, redis, RedisStore, request, server, twitch, _
 
 function ensureAuthenticated(req, res, next) {
 	if(req.isAuthenticated()) {
@@ -13,7 +13,7 @@ exports.init = function(m) {
 	Mikuia = m
 	async = require('async')
 	connect = require('connect')
-	express = require('express.io')
+	express = require('express')
 	passport = require('passport')
 	passportIo = require('passport.socketio')
 	redis = Mikuia.modules.redis
@@ -23,14 +23,17 @@ exports.init = function(m) {
 	twitch = require('passport-twitchtv').Strategy
 	_ = Mikuia.modules._
 	app = express()
-	app.http().io()
+	server = require('http').createServer(app)
+	io = require('socket.io').listen(server)
+
+	server.listen(5587)
 
 	var sessionStore = new RedisStore({
 		client: redis,
 		host: 'localhost'
 	})
 
-	app.io.set('authorization', passportIo.authorize({
+	io.set('authorization', passportIo.authorize({
 		cookieParser: express.cookieParser,
 		key: 'express.sid',
 		secret: 'wewillchangethislater',
@@ -85,170 +88,170 @@ exports.init = function(m) {
 
 	app.use(rollbar.errorHandler(Mikuia.settings.plugins.base.rollbarToken))
 
-	app.io.route('ready', function(req) {
-		//console.log(req.handshake.user)
-	})
+	io.sockets.on('connection', function(socket) {
 
-	app.io.route('commands.add', function(req) {
-		redis.sadd('channel:' + req.handshake.user.username + ':commands', req.data.name, function(err, reply) {
-			redis.set('channel:' + req.handshake.user.username + ':command:' + req.data.name, JSON.stringify({command: req.data.command}), function(err2, reply2) {
-				req.io.emit('commands:add', {
-					name: req.data.name,
-					command: req.data.command
+		socket.on('ready', function() {
+			// Yes
+		})
+
+		socket.on('commands.add', function(data) {
+			Mikuia.channels2[socket.handshake.user.username].addCommand(data.name, data.command, function(err, commandName, command) {
+				socket.emit('commands:add', {
+					name: data.name,
+					command: data.command
 				})
-				Mikuia.update(req.handshake.user.username)
 			})
 		})
-	})
 
-	app.io.route('commands.remove', function(req) {
-		redis.srem('channel:' + req.handshake.user.username + ':commands', req.data.name, function(err, reply) {
-			redis.set('channel:' + req.handshake.user.username + ':command:' + req.data.name, '', function(err2, reply2) {
-				req.io.emit('commands:remove', {
-					name: req.data.name
+		socket.on('commands.remove', function(data) {
+			redis.srem('channel:' + socket.handshake.user.username + ':commands', data.name, function(err, reply) {
+				redis.set('channel:' + socket.handshake.user.username + ':command:' + data.name, '', function(err2, reply2) {
+					socket.emit('commands:remove', {
+						name: data.name
+					})
+					Mikuia.update(socket.handshake.user.username)
 				})
-				Mikuia.update(req.handshake.user.username)
 			})
 		})
-	})
 
-	app.io.route('commands.save', function(req) {
-		redis.set('channel:' + req.handshake.user.username + ':command:' + req.data.name + ':settings', JSON.stringify(req.data.settings), function(err, reply) {
-			req.io.emit('commands:save', {
-				command: req.data.name,
-				reply: reply
+		socket.on('commands.save', function(data) {
+			redis.set('channel:' + socket.handshake.user.username + ':command:' + data.name + ':settings', JSON.stringify(data.settings), function(err, reply) {
+				socket.emit('commands:save', {
+					command: data.name,
+					reply: reply
+				})
+				Mikuia.update(socket.handshake.user.username)
 			})
-			Mikuia.update(req.handshake.user.username)
 		})
-	})
 
-	app.io.route('getCommands', function(req) {
-		redis.smembers('channel:' + req.handshake.user.username + ':plugins', function(err, reply) {
-			var commands = {}
-			_.each(reply, function(pluginName) {
-				for(var commandKey in Mikuia.plugins[pluginName].manifest.commands) {
-					var command = Mikuia.plugins[pluginName].manifest.commands[commandKey]
-					commands[commandKey] = command
-					commands[commandKey].plugin = pluginName
+		socket.on('getCommands', function() {
+			redis.smembers('channel:' + socket.handshake.user.username + ':plugins', function(err, reply) {
+				var commands = {}
+				_.each(reply, function(pluginName) {
+					for(var commandKey in Mikuia.plugins[pluginName].manifest.commands) {
+						var command = Mikuia.plugins[pluginName].manifest.commands[commandKey]
+						commands[commandKey] = command
+						commands[commandKey].plugin = pluginName
+					}
+				})
+				socket.emit('commands', {
+					commands: commands
+				})
+				redis.smembers('channel:' + socket.handshake.user.username + ':commands', function(err2, reply2) {
+					_.each(reply2, function(command) {
+						redis.get('channel:' + socket.handshake.user.username + ':command:' + command, function(err3, reply3) {
+							var data = JSON.parse(reply3)
+							redis.get('channel:' + socket.handshake.user.username + ':command:' + command + ':settings', function(err4, reply4) {
+								var settings = {}
+								try {
+									settings = JSON.parse(reply4)
+								} catch(e) {
+									console.log(e)
+								}
+								socket.emit('commands:add', {
+									name: command,
+									command: data.command,
+									settings: settings
+								})
+							})
+						})
+					})
+				})
+			})
+		})
+
+		socket.on('getSettings', function() {
+			redis.sismember('channels', socket.handshake.user.username, function(err, reply) {
+				socket.emit('settings', {
+					enabled: reply
+				})
+				if(reply) {
+					redis.smembers('channel:' + socket.handshake.user.username + ':plugins', function(err, reply) {
+						var plugins = {}
+						_.each(reply, function(pluginName) {
+							plugins[pluginName] = Mikuia.plugins[pluginName].manifest
+						})
+						socket.emit('settings:plugins', {
+							plugins: plugins
+						})
+						async.each(Object.keys(plugins), function(item, callback) {
+							redis.get('channel:' + socket.handshake.user.username + ':plugin:' + item + ':settings', function(err, reply) {
+								var data = JSON.parse(reply)
+								socket.emit('settings:plugin', {
+									plugin: item,
+									settings: data
+								})
+							})
+						}, function(err) {
+							// oh dear
+						})
+					})
 				}
 			})
-			req.io.emit('commands', {
-				commands: commands
-			})
-			redis.smembers('channel:' + req.handshake.user.username + ':commands', function(err2, reply2) {
-				_.each(reply2, function(command) {
-					redis.get('channel:' + req.handshake.user.username + ':command:' + command, function(err3, reply3) {
-						var data = JSON.parse(reply3)
-						redis.get('channel:' + req.handshake.user.username + ':command:' + command + ':settings', function(err4, reply4) {
-							var settings = {}
-							try {
-								settings = JSON.parse(reply4)
-							} catch(e) {
-								console.log(e)
-							}
-							req.io.emit('commands:add', {
-								name: command,
-								command: data.command,
-								settings: settings
-							})
+		})
 
-						})
-					})
+		socket.on('plugin.enable', function(data) {
+			redis.sadd('channel:' + socket.handshake.user.username + ':plugins', data.plugin, function(err, reply) {
+				socket.emit('plugin:enable', {
+					plugin: data.plugin
 				})
+				Mikuia.update(socket.handshake.user.username)
 			})
 		})
-	})
 
-	app.io.route('getSettings', function(req) {
-		redis.sismember('channels', req.handshake.user.username, function(err, reply) {
-			req.io.emit('settings', {
-				enabled: reply
+		socket.on('plugin.disable', function(data) {
+			redis.srem('channel:' + socket.handshake.user.username + ':plugins', data.plugin, function(err, reply) {
+				socket.emit('plugin:disable', {
+					plugin: data.plugin
+				})
+				var index = Mikuia.enabled[data.plugin].indexOf(socket.handshake.user.username)
+				Mikuia.enabled[data.plugin].splice(index, 1)
+				Mikuia.update(socket.handshake.user.username)
 			})
-			if(reply) {
-				redis.smembers('channel:' + req.handshake.user.username + ':plugins', function(err, reply) {
+		})
+
+
+		socket.on('settings.enable', function(data) {
+			redis.sadd('channels', socket.handshake.user.username, function(err, reply) {
+				socket.emit('settings:enable', {
+					reply: reply
+				})
+			})
+			redis.sadd('channel:' + socket.handshake.user.username + ':plugins', 'base', function(err, reply) {
+				Mikuia.joinChannel(socket.handshake.user.username)
+				Mikuia.update(socket.handshake.user.username)
+				redis.smembers('channel:' + socket.handshake.user.username + ':plugins', function(err2, reply2) {
 					var plugins = {}
-					_.each(reply, function(pluginName) {
+					_.each(reply2, function(pluginName) {
 						plugins[pluginName] = Mikuia.plugins[pluginName].manifest
 					})
-					req.io.emit('settings:plugins', {
+					socket.emit('settings:plugins', {
 						plugins: plugins
 					})
-					async.each(Object.keys(plugins), function(item, callback) {
-						redis.get('channel:' + req.handshake.user.username + ':plugin:' + item + ':settings', function(err, reply) {
-							var data = JSON.parse(reply)
-							req.io.emit('settings:plugin', {
-								plugin: item,
-								settings: data
-							})
-						})
-					}, function(err) {
-						// oh dear
-					})
-				})
-			}
-		})
-	})
-
-	app.io.route('plugin.enable', function(req) {
-		redis.sadd('channel:' + req.handshake.user.username + ':plugins', req.data.plugin, function(err, reply) {
-			req.io.emit('plugin:enable', {
-				plugin: req.data.plugin
-			})
-			Mikuia.update(req.handshake.user.username)
-		})
-	})
-
-	app.io.route('plugin.disable', function(req) {
-		redis.srem('channel:' + req.handshake.user.username + ':plugins', req.data.plugin, function(err, reply) {
-			req.io.emit('plugin:disable', {
-				plugin: req.data.plugin
-			})
-			var index = Mikuia.enabled[req.data.plugin].indexOf(req.handshake.user.username)
-			Mikuia.enabled[req.data.plugin].splice(index, 1)
-			Mikuia.update(req.handshake.user.username)
-		})
-	})
-
-
-	app.io.route('settings.enable', function(req) {
-		redis.sadd('channels', req.handshake.user.username, function(err, reply) {
-			req.io.emit('settings:enable', {
-				reply: reply
-			})
-		})
-		redis.sadd('channel:' + req.handshake.user.username + ':plugins', 'base', function(err, reply) {
-			Mikuia.joinChannel(req.handshake.user.username)
-			Mikuia.update(req.handshake.user.username)
-			redis.smembers('channel:' + req.handshake.user.username + ':plugins', function(err2, reply2) {
-				var plugins = {}
-				_.each(reply2, function(pluginName) {
-					plugins[pluginName] = Mikuia.plugins[pluginName].manifest
-				})
-				req.io.emit('settings:plugins', {
-					plugins: plugins
 				})
 			})
 		})
-	})
 
-	app.io.route('settings.disable', function(req) {
-		redis.srem('channels', req.handshake.user.username, function(err, reply) {
-			req.io.emit('settings:disable', {
-				reply: reply
+		socket.on('settings.disable', function(data) {
+			redis.srem('channels', socket.handshake.user.username, function(err, reply) {
+				socket.emit('settings:disable', {
+					reply: reply
+				})
+				Mikuia.leaveChannel(socket.handshake.user.username, 'Disabled via website.')
+				Mikuia.update(socket.handshake.user.username)
 			})
-			Mikuia.leaveChannel(req.handshake.user.username, 'Disabled via website.')
-			Mikuia.update(req.handshake.user.username)
 		})
-	})
 
-	app.io.route('settings.plugin', function(req) {
-		redis.set('channel:' + req.handshake.user.username + ':plugin:' + req.data.plugin + ':settings', JSON.stringify(req.data.settings), function(err, reply) {
-			req.io.emit('settings:plugin:save', {
-				plugin: req.data.plugin,
-				reply: reply
+		socket.on('settings.plugin', function(data) {
+			redis.set('channel:' + socket.handshake.user.username + ':plugin:' + data.plugin + ':settings', JSON.stringify(data.settings), function(err, reply) {
+				socket.emit('settings:plugin:save', {
+					plugin: data.plugin,
+					reply: reply
+				})
+				Mikuia.update(socket.handshake.user.username)
 			})
-			Mikuia.update(req.handshake.user.username)
 		})
+
 	})
 
 	var routes = {}
@@ -370,7 +373,4 @@ exports.init = function(m) {
 		console.log(req.body)
 		res.send(200)
 	})
-
-	app.listen(5587)
-
 }

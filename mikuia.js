@@ -33,6 +33,7 @@ var Mikuia = new function() {
 	}
 
 	this.channels = {}
+	this.channels2 = {}
 	this.commands = {}
 	this.enabled = {}
 	this.hooks = {
@@ -74,8 +75,10 @@ var Mikuia = new function() {
 
 			if(!_.isUndefined(this.channels[channel].commands[trigger])) {
 				var command = this.channels[channel].commands[trigger].command
-				var pl = this.channels[channel].plugins[this.commands[command]]
-				if(!_.isUndefined(pl) && !_.isUndefined(pl.plugin)) {
+				var pl = this.channels[channel].plugins[this.commands[command].plugin]
+				console.log('LETS HANDLE THIS')
+				console.log(pl)
+				if(!_.isUndefined(pl)) {
 					this.plugins[this.commands[command].plugin].handleCommand(command, tokens, from, channel)
 				}
 			}
@@ -159,6 +162,7 @@ var Mikuia = new function() {
 			display_name: channelName,
 			plugins: {}
 		}
+		self.channels2[channelName] = new Channel(channelName)
 		redis.smembers('channel:' + channelName + ':plugins', function(err, plugins) {
 			if(err) {
 				self.log(self.LogStatus.Error, 'Failed to get a list of plugins for ' + channelName + '.')
@@ -216,6 +220,10 @@ var Mikuia = new function() {
 		})
 	}
 }
+
+var channel = require('./models/Channel')
+channel.init(Mikuia)
+var Channel = channel.class
 
 Mikuia.log(Mikuia.LogStatus.Normal, 'Starting up Mikuia...')
 
