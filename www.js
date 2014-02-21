@@ -104,23 +104,19 @@ exports.init = function(m) {
 		})
 
 		socket.on('commands.remove', function(data) {
-			redis.srem('channel:' + socket.handshake.user.username + ':commands', data.name, function(err, reply) {
-				redis.set('channel:' + socket.handshake.user.username + ':command:' + data.name, '', function(err2, reply2) {
-					socket.emit('commands:remove', {
-						name: data.name
-					})
-					Mikuia.update(socket.handshake.user.username)
+			Mikuia.channels2[socket.handshake.user.username].removeCommand(data.name, function(err, command) {
+				socket.emit('commands:remove', {
+					name: command
 				})
 			})
 		})
 
 		socket.on('commands.save', function(data) {
-			redis.set('channel:' + socket.handshake.user.username + ':command:' + data.name + ':settings', JSON.stringify(data.settings), function(err, reply) {
+			Mikuia.channels2[socket.handshake.user.username].saveCommand(data.name, JSON.stringify(data.settings), function(err, commandName, reply) {
 				socket.emit('commands:save', {
-					command: data.name,
+					command: command,
 					reply: reply
 				})
-				Mikuia.update(socket.handshake.user.username)
 			})
 		})
 

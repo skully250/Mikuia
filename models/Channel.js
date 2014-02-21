@@ -18,7 +18,7 @@ exports.class = function(channelName) {
 			}
 			Mikuia.modules.redis.set('channel:' + self.getName() + ':command:' + commandName, JSON.stringify({command: command}), function(err2, reply2) {
 				if(err2) {
-					Mikuia.log(Mikuia.LogStatus.Error, 'Failed to set command ' + commandName + ' for channel ' + this.getName() + '.')
+					Mikuia.log(Mikuia.LogStatus.Error, 'Failed to set command ' + commandName + ' for channel ' + self.getName() + '.')
 				}
 				callback(false, commandName, command)
 				self.load()
@@ -138,8 +138,34 @@ exports.class = function(channelName) {
 		})
 	}
 
+	this.removeCommand = function(commandName, callback) {
+		var self = this
+		Mikuia.modules.redis.srem('channel:' + this.getName() + ':commands', commandName, function(err, reply) {
+			if(err) {
+				Mikuia.log(Mikuia.LogStatus.Error, 'Failed to remove command member ' + commandName + ' from channel ' + this.getName() + '.')
+			}
+			Mikuia.modules.redis.del('channel:' + self.getName() + ':command:' + commandName, function(err2, reply2) {
+				if(err2) {
+					Mikuia.log(Mikuia.LogStatus.Error, 'Failed to delete command ' + commandName + ' for channel ' + self.getName() + '.')
+				}
+				callback(false, commandName)
+				self.load()
+			})
+		})
+	}
+
 	this.save = function() {
 
+	}
+
+	this.saveCommand = function(commandName, settings, callback) {
+		var self = this
+		Mikuia.modules.redis.set('channel:' + this.getName() + ':command:' + commandName + ':settings', JSON.stringify(settings), function(err, reply) {
+			if(err) {
+				Mikuia.log(Mikuia.LogStatus.Error, 'Failed to save command ' + commandName + ' for channel ' + self.getName() + '.')
+			}
+			callback(false, commandName, reply)
+		})
 	}
 
 	this.load()
