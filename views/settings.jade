@@ -65,6 +65,7 @@ block footerScript
 
 		io.emit('getSettings')
 		io.on('settings', function(data) {
+			console.log(data)
 			if(data.enabled) {
 				enable()
 			} else {

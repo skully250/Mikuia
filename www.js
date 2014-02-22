@@ -90,161 +90,161 @@ exports.init = function(m) {
 
 	io.sockets.on('connection', function(socket) {
 
+		var Channel = Mikuia.getChannel(socket.handshake.user.username)
+
 		socket.on('ready', function() {
 			// Yes
 		})
 
 		socket.on('commands.add', function(data) {
-			Mikuia.channels2[socket.handshake.user.username].addCommand(data.name, data.command, function(err, commandName, command) {
-				socket.emit('commands:add', {
-					name: data.name,
-					command: data.command
-				})
+			Channel.addCommand(data.name, data.command, function(err) {
+				if(!err) {
+					socket.emit('commands:add', {
+						name: data.name,
+						command: data.command
+					})
+				} else {
+					// TODO
+				}				
 			})
 		})
 
 		socket.on('commands.remove', function(data) {
-			Mikuia.channels2[socket.handshake.user.username].removeCommand(data.name, function(err, command) {
-				socket.emit('commands:remove', {
-					name: command
-				})
+			Channel.removeCommand(data.name, function(err) {
+				if(!err) {
+					socket.emit('commands:remove', {
+						name: data.name
+					})
+				} else {
+					// TODO
+				}
 			})
 		})
 
 		socket.on('commands.save', function(data) {
-			Mikuia.channels2[socket.handshake.user.username].saveCommand(data.name, JSON.stringify(data.settings), function(err, commandName, reply) {
-				socket.emit('commands:save', {
-					command: command,
-					reply: reply
-				})
+			Channel.setCommandSettings(data.name, data.settings, function(err) {
+				if(!err) {
+					socket.emit('commands:save', {
+						command: data.name
+					})
+				} else {
+					// TODO
+				}
 			})
 		})
 
 		socket.on('getCommands', function() {
-			redis.smembers('channel:' + socket.handshake.user.username + ':plugins', function(err, reply) {
-				var commands = {}
-				_.each(reply, function(pluginName) {
-					for(var commandKey in Mikuia.plugins[pluginName].manifest.commands) {
-						var command = Mikuia.plugins[pluginName].manifest.commands[commandKey]
-						commands[commandKey] = command
-						commands[commandKey].plugin = pluginName
-					}
-				})
-				socket.emit('commands', {
-					commands: commands
-				})
-				redis.smembers('channel:' + socket.handshake.user.username + ':commands', function(err2, reply2) {
-					_.each(reply2, function(command) {
-						redis.get('channel:' + socket.handshake.user.username + ':command:' + command, function(err3, reply3) {
-							var data = JSON.parse(reply3)
-							redis.get('channel:' + socket.handshake.user.username + ':command:' + command + ':settings', function(err4, reply4) {
-								var settings = {}
-								try {
-									settings = JSON.parse(reply4)
-								} catch(e) {
-									console.log(e)
-								}
-								socket.emit('commands:add', {
-									name: command,
-									command: data.command,
-									settings: settings
-								})
-							})
-						})
-					})
+			var commands = {}
+
+			_.each(Channel.getPlugins(), function(pluginName) {
+				for(var commandKey in Mikuia.plugins[pluginName].manifest.commands) {
+					var command = Mikuia.plugins[pluginName].manifest.commands[commandKey]
+					commands[commandKey] = command
+					commands[commandKey].plugin = pluginName
+				}
+			})
+
+			socket.emit('commands', {
+				commands: commands
+			})
+
+			_.each(Channel.getCommands(), function(element, key, list) {
+				socket.emit('commands:add', {
+					name: key,
+					command: element.command,
+					settings: element.settings
 				})
 			})
 		})
 
 		socket.on('getSettings', function() {
-			redis.sismember('channels', socket.handshake.user.username, function(err, reply) {
-				socket.emit('settings', {
-					enabled: reply
-				})
-				if(reply) {
-					redis.smembers('channel:' + socket.handshake.user.username + ':plugins', function(err, reply) {
+			Channel.isEnabled(function(err, enabled) {
+				if(!err) {
+					socket.emit('settings', {
+						enabled: enabled
+					})
+					if(enabled) {
 						var plugins = {}
-						_.each(reply, function(pluginName) {
+
+						_.each(Channel.getPlugins(), function(pluginName) {
 							plugins[pluginName] = Mikuia.plugins[pluginName].manifest
 						})
+
 						socket.emit('settings:plugins', {
 							plugins: plugins
 						})
-						async.each(Object.keys(plugins), function(item, callback) {
-							redis.get('channel:' + socket.handshake.user.username + ':plugin:' + item + ':settings', function(err, reply) {
-								var data = JSON.parse(reply)
-								socket.emit('settings:plugin', {
-									plugin: item,
-									settings: data
-								})
+
+						_.each(plugins, function(element, key, list) {
+							socket.emit('settings:plugin', {
+								plugin: key,
+								settings: Channel.getSettings(key)
 							})
-						}, function(err) {
-							// oh dear
 						})
-					})
+					}
+				} else {
+					// TODO
 				}
 			})
 		})
 
 		socket.on('plugin.enable', function(data) {
-			redis.sadd('channel:' + socket.handshake.user.username + ':plugins', data.plugin, function(err, reply) {
-				socket.emit('plugin:enable', {
-					plugin: data.plugin
-				})
-				Mikuia.update(socket.handshake.user.username)
+			Channel.addPlugin(data.plugin, function(err, reply) {
+				if(!err) {
+					socket.emit('plugin:enable', {
+						plugin: data.plugin
+					})
+				} else {
+					// TODO
+				}
 			})
 		})
 
 		socket.on('plugin.disable', function(data) {
-			redis.srem('channel:' + socket.handshake.user.username + ':plugins', data.plugin, function(err, reply) {
-				socket.emit('plugin:disable', {
-					plugin: data.plugin
-				})
-				var index = Mikuia.enabled[data.plugin].indexOf(socket.handshake.user.username)
-				Mikuia.enabled[data.plugin].splice(index, 1)
-				Mikuia.update(socket.handshake.user.username)
+			Channel.removePlugin(data.plugin, function(err, reply) {
+				if(!err) {
+					socket.emit('plugin:disable', {
+						plugin: data.plugin
+					})
+				} else {	
+					// TODO
+				}
 			})
 		})
 
-
 		socket.on('settings.enable', function(data) {
-			redis.sadd('channels', socket.handshake.user.username, function(err, reply) {
-				socket.emit('settings:enable', {
-					reply: reply
-				})
-			})
-			redis.sadd('channel:' + socket.handshake.user.username + ':plugins', 'base', function(err, reply) {
-				Mikuia.joinChannel(socket.handshake.user.username)
-				Mikuia.update(socket.handshake.user.username)
-				redis.smembers('channel:' + socket.handshake.user.username + ':plugins', function(err2, reply2) {
-					var plugins = {}
-					_.each(reply2, function(pluginName) {
-						plugins[pluginName] = Mikuia.plugins[pluginName].manifest
+			Channel.enable(function(err, reply) {
+				if(!err) {
+					socket.emit('settings:enable', {
+						reply: reply
 					})
-					socket.emit('settings:plugins', {
-						plugins: plugins
-					})
-				})
+				} else {
+					// TODO
+				}
 			})
 		})
 
 		socket.on('settings.disable', function(data) {
-			redis.srem('channels', socket.handshake.user.username, function(err, reply) {
-				socket.emit('settings:disable', {
-					reply: reply
-				})
-				Mikuia.leaveChannel(socket.handshake.user.username, 'Disabled via website.')
-				Mikuia.update(socket.handshake.user.username)
+			Channel.disable(function(err, reply) {
+				if(!err) {
+					socket.emit('settings:disable', {
+						reply: reply
+					})
+				} else {
+					// TODO
+				}
 			})
 		})
 
 		socket.on('settings.plugin', function(data) {
-			redis.set('channel:' + socket.handshake.user.username + ':plugin:' + data.plugin + ':settings', JSON.stringify(data.settings), function(err, reply) {
-				socket.emit('settings:plugin:save', {
-					plugin: data.plugin,
-					reply: reply
-				})
-				Mikuia.update(socket.handshake.user.username)
+			Channel.savePluginSettings(data.plugin, data.settings, function(err, reply) {
+				if(!err) {
+					socket.emit('settings:plugin:save', {
+						plugin: data.plugin,
+						reply: Channel.getSettings(data.plugin)
+					})
+				} else {
+					// TODO
+				}
 			})
 		})
 

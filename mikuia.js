@@ -63,6 +63,15 @@ var Mikuia = new function() {
 	}
 	this.streams = {}
 
+	this.getChannel = function(channelName) {
+		if(channelName in this.channels2) {
+			return this.channels2[channelName]
+		} else {
+			this.channels2[channelName] = new Channel(channelName)
+			return this.channels2[channelName]
+		}
+	}
+
 	this.handleError = function(message) {
 		rollbar.reportMessage(message)
 	}
