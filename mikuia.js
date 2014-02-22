@@ -64,6 +64,10 @@ var Mikuia = new function() {
 	this.streams = {}
 
 	this.getChannel = function(channelName) {
+		if(channelName.indexOf('#') == 0) {
+			channelName = channelName.replace('#', '')
+		}
+
 		if(channelName in this.channels2) {
 			return this.channels2[channelName]
 		} else {
@@ -82,11 +86,11 @@ var Mikuia = new function() {
 			var tokens = message.replace('!', '').split(' ')
 			var trigger = tokens[0].toLowerCase()
 
-			if(!_.isUndefined(this.channels[channel].commands[trigger])) {
+			var commandObject = this.getChannel(channel).getCommand(trigger)
+
+			if(commandObject != false) {
 				var command = this.channels[channel].commands[trigger].command
-				var pl = this.channels[channel].plugins[this.commands[command].plugin]
-				console.log('LETS HANDLE THIS')
-				console.log(pl)
+				var pl = this.getChannel(channel).getPlugin(this.commands[command].plugin)
 				if(!_.isUndefined(pl)) {
 					this.plugins[this.commands[command].plugin].handleCommand(command, tokens, from, channel)
 				}

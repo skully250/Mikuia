@@ -53,12 +53,24 @@ exports.class = function(channelName) {
 		this.addPlugin('base', function() {})
 	}
 
+	this.getCommand = function(commandName) {
+		if(commandName in this.commands) {
+			return this.commands[commandName]
+		} else {
+			return false
+		}
+	}
+
 	this.getCommands = function() {
 		return this.commands
 	}
 
 	this.getName = function() {
 		return this.name
+	}
+
+	this.getPlugin = function(pluginName) {
+		return this.plugins[pluginName]
 	}
 
 	this.getPlugins = function() {
@@ -212,10 +224,6 @@ exports.class = function(channelName) {
 			var index = Mikuia.enabled[pluginName].indexOf(self.getName())
 			Mikuia.enabled[pluginName].splice(index, 1)
 		})
-	}
-
-	this.save = function() {
-
 	}
 
 	this.setCommandSettings = function(commandName, settings, callback) {

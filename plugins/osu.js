@@ -331,7 +331,7 @@ exports.runHook = function(hookName) {
 
 				// BRACE FOR THE IMPACT
 				if(canWeDoIt) {
-					if(Mikuia.channels[channel].plugins.osu.settings) {
+					if(!_.isUndefined(Mikuia.channels[channel]) && Mikuia.channels[channel].plugins.osu.settings) {
 						if(Mikuia.channels[channel].plugins.osu.settings.events) {
 							osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, 0, function(err, user) {
 								if(!err && !_.isEmpty(user) && !_.isUndefined(userData[user.username]) && userData[user.username].pp != 0) {
