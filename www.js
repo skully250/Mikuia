@@ -122,7 +122,7 @@ exports.init = function(m) {
 		})
 
 		socket.on('commands.save', function(data) {
-			Channel.setCommandSettings(data.name, data.settings, function(err) {
+			Channel.setCommandSettings(data.name, data.settings, function(err, reply) {
 				if(!err) {
 					socket.emit('commands:save', {
 						command: data.name
@@ -236,11 +236,11 @@ exports.init = function(m) {
 		})
 
 		socket.on('settings.plugin', function(data) {
-			Channel.savePluginSettings(data.plugin, data.settings, function(err, reply) {
+			Channel.setPluginSettings(data.plugin, data.settings, function(err, reply) {
 				if(!err) {
 					socket.emit('settings:plugin:save', {
 						plugin: data.plugin,
-						reply: Channel.getSettings(data.plugin)
+						reply: reply
 					})
 				} else {
 					// TODO

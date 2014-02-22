@@ -224,16 +224,14 @@ exports.class = function(channelName) {
 		Mikuia.modules.redis.set('channel:' + this.getName() + ':command:' + commandName + ':settings', JSON.stringify(settings), function(err, reply) {
 			if(err) {
 				Mikuia.log(Mikuia.LogStatus.Error, 'Failed to save command ' + commandName + ' for channel ' + self.getName() + '.')
-				callback(true)
-			} else {
-				callback(false)
 			}
+			callback(err, reply)
 		})
 	}
 
 	this.setPluginSettings = function(pluginName, settings, callback) {
 		this.plugins[pluginName].settings = settings
-		Mikuia.modules.redis.set('channel:' + this.getName() + ':plugin:' + pluginName + ':settings', JSON.stringify(data.settings), function(err, reply) {
+		Mikuia.modules.redis.set('channel:' + this.getName() + ':plugin:' + pluginName + ':settings', JSON.stringify(settings), function(err, reply) {
 			callback(err, reply)
 		})
 	}
