@@ -129,7 +129,7 @@ function checkForMap(from, channel, message, callback) {
 
 function sendRequest(channel, from, map, link) {
 	var areWeSending = true
-	var settings = Mikuia.channels[channel].plugins.osu.settings
+	var settings = Mikuia.getChannel(channel).plugins.osu.settings
 	if(settings != undefined && settings != null) {
 		if(settings.requestLimit) {
 			if(lastRequest[from] && (new Date).getTime() < lastRequest[from] + settings.requestLimit * 60000) {

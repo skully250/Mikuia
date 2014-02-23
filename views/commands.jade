@@ -24,6 +24,10 @@ block footerScript
 		listeners.push('commands', 'commands:add', 'commands:remove', 'commands:save')
 		var commands = {}
 
+		function parseName(name) {
+			return name.split('.').join('\\.').split('!').join('\\!')
+		}
+
 		function removeCommand(command) {
 			io.emit('commands.remove', {
 				name: command
@@ -59,6 +63,9 @@ block footerScript
 		})
 
 		io.on('commands:add', function(data) {
+
+			var parsedName = parseName(data.name)
+
 			$('#panels').append(
 				'<div class="col-md-6" style="display: none;" id="command_' + data.name + '"> \
 					<div class="panel panel-default"> \
@@ -74,13 +81,13 @@ block footerScript
 				</div>'
 			)
 			if(commands[data.command].arguments != undefined) {
-				$('#command_' + data.name + '_arguments').before('<br />Arguments:')
+				$('#command_' + parsedName + '_arguments').before('<br />Arguments:')
 				for(var argumentKey in commands[data.command].arguments) {
 					var argument = commands[data.command].arguments[argumentKey]
 					if(argument.optional) {
 						argument.description += ' (optional)'
 					}
-					$('#command_' + data.name + '_arguments').append('<b>' + argumentKey + '</b> - ' + argument.description)
+					$('#command_' + parsedName + '_arguments').append('<b>' + argumentKey + '</b> - ' + argument.description)
 				}
 			}
 			if(commands[data.command].settings != undefined) {
@@ -89,13 +96,14 @@ block footerScript
 				} else {
 					var settings = {}
 				}
-				$('#command_' + data.name + ' .panel-body small').append('Settings:<br />')
+
+				$('#command_' + parsedName + ' .panel-body small').append('Settings:<br />')
 				for(var settingKey in commands[data.command].settings) {
 					var setting = commands[data.command].settings[settingKey]
 					var id = 'command_' + data.name + '_settings_' + settingKey
 					switch(setting.type) {
 						case 'radio':
-							$('#command_' + data.name + ' .panel-body small').append(
+							$('#command_' + parsedName + ' .panel-body small').append(
 								'<label><input class="form-control" type="checkbox" name="' + id + '" id="' + id + '"> ' + setting.description + '</label><br /> \
 							')
 							break
@@ -104,7 +112,7 @@ block footerScript
 							if(settings[settingKey] != undefined) {
 								value = settings[settingKey]
 							}
-							$('#command_' + data.name + ' .panel-body small').append(
+							$('#command_' + parsedName + ' .panel-body small').append(
 								'<div class="input-group"> \
 									<span class="input-group-addon">' + setting.name + '</span> \
 									<input class="form-control" type="text" name="' + id + '" id="' + id + '" placeholder="' + setting.description + '" value="' + value + '"></span><br /> \
@@ -112,24 +120,30 @@ block footerScript
 							break
 					}
 				}
-				$('#command_' + data.name + ' .panel-body button').before('<button type="button" onclick="save(\'' + data.command + '\', \'' + data.name + '\')" class="btn btn-primary btn-xs pull-right" id="command_' + data.name + '_save">Save</button>')
+				$('#command_' + parsedName + ' .panel-body button').before('<button type="button" onclick="save(\'' + data.command + '\', \'' + parsedName + '\')" class="btn btn-primary btn-xs pull-right" id="command_' + parsedName + '_save">Save</button>')
 			}
-			$('#command_' + data.name).fadeIn('slow')
+			$('#command_' + parsedName).fadeIn('slow')
 		})
 
 		io.on('commands:save', function(data) {
 			if(data.reply == 'OK') {
-				$('#command_' + data.command + '_save').removeClass('btn-primary').html('Saved!')
+
+				var parsedName = parseName(data.command)
+
+				$('#command_' + parsedName + '_save').removeClass('btn-primary').html('Saved!')
 				flashNavbar('success', 'Settings for ' + data.command + ' command have been saved!')
 				setTimeout(function() {
-					$('#command_' + data.command + '_save').addClass('btn-primary').html('Save')
+					$('#command_' + parsedName + '_save').addClass('btn-primary').html('Save')
 				}, 3000)
 			}
 		})
 
 		io.on('commands:remove', function(data) {
-			$('#command_' + data.name).fadeOut('slow', function() {
-				$('#command_' + data.name).remove()
+
+			var parsedName = parseName(data.name)
+
+			$('#command_' + parsedName).fadeOut('slow', function() {
+				$('#command_' + parsedName).remove()
 				flashNavbar('success', 'Command "' + data.name + '" has been removed!')
 			})
 		})

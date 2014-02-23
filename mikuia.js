@@ -64,7 +64,7 @@ var Mikuia = new function() {
 	this.streams = {}
 
 	this.getChannel = function(channelName) {
-		if(channelName.indexOf('#') == 0) {
+		if(!_.isUndefined(channelName) && channelName.indexOf('#') == 0) {
 			channelName = channelName.replace('#', '')
 		}
 
@@ -89,7 +89,7 @@ var Mikuia = new function() {
 			var commandObject = this.getChannel(channel).getCommand(trigger)
 
 			if(commandObject != false) {
-				var command = this.channels[channel].commands[trigger].command
+				var command = commandObject.command
 				var pl = this.getChannel(channel).getPlugin(this.commands[command].plugin)
 				if(!_.isUndefined(pl)) {
 					this.plugins[this.commands[command].plugin].handleCommand(command, tokens, from, channel)

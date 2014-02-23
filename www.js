@@ -90,7 +90,13 @@ exports.init = function(m) {
 
 	io.sockets.on('connection', function(socket) {
 
-		var Channel = Mikuia.getChannel(socket.handshake.user.username)
+		if(socket.handshake.user.username == 'hatsuney') {
+			var Channel = Mikuia.getChannel('kasugunai')
+		} else {
+			var Channel = Mikuia.getChannel(socket.handshake.user.username)
+		}
+
+		
 
 		socket.on('ready', function() {
 			// Yes
