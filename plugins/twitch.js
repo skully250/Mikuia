@@ -13,19 +13,14 @@ exports.manifest = {
 	settings: {}
 }
 
-exports.omg = function() {
-	console.log(Mikuia.modules.twitch)
-}
-
-exports.handleCommand = function(command, tokens, from, channel) {
+exports.handleCommand = function(command, tokens, from, Channel) {
 	switch(command) {
 		case 'twitch.viewers':
-			Mikuia.modules.twitch._get('streams/' + channel.replace('#', ''), function(err, stream) {
-				if(err) {
-					Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get viewer count for ' + channel.replace('#', '') + '.')
-				}
-				if(stream.req.res.body.stream != undefined) {
-					Mikuia.say(channel, stream.req.res.body.stream.viewers + ' viewers.')
+			Channel.getViewers(function(err, viewers) {
+				if(!err) {
+					Mikuia.say(Channel.getIRCName(), viewers + ' viewers.')
+				} else {
+					Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get viewer count for ' + Channel.getDisplayName() + '.')
 				}
 			})
 			break

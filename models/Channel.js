@@ -7,6 +7,7 @@ exports.init = function(m) {
 
 exports.class = function(channelName) {
 	this.commands = {}
+	this.displayName = channelName
 	this.name = channelName
 	this.plugins = {}
 
@@ -65,6 +66,14 @@ exports.class = function(channelName) {
 		return this.commands
 	}
 
+	this.getDisplayName = function() {
+		return this.displayName
+	}
+
+	this.getIRCName = function() {
+		return '#' + this.getName()
+	}
+
 	this.getName = function() {
 		return this.name
 	}
@@ -81,7 +90,7 @@ exports.class = function(channelName) {
 		var defaults = Mikuia.plugins[pluginName].manifest.settings.channel
 		var settings = this.plugins[pluginName].settings
 
-		if(!_.isUndefined(settings) && !_.isUndefined(settings[settingName])) {
+		if(_.isObject(settings) && !_.isUndefined(settings[settingName]) && !_.isNull(settings[settingName])) {
 			return settings[settingName]
 		} else if(!_.isUndefined(defaults[settingName]) && !_.isUndefined(defaults[settingName].default)){
 			return defaults[settingName].default
@@ -116,6 +125,10 @@ exports.class = function(channelName) {
 				callback(true, null)
 			}
 		})
+	}
+
+	this.hasPlugin = function(pluginName) {
+		return (pluginName in this.plugins)
 	}
 
 	this.isEnabled = function(callback) {
@@ -235,6 +248,10 @@ exports.class = function(channelName) {
 			}
 			callback(err, reply)
 		})
+	}
+
+	this.setDisplayName = function(displayName) {
+		this.displayName = displayName
 	}
 
 	this.setPluginSettings = function(pluginName, settings, callback) {

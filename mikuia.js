@@ -86,19 +86,26 @@ var Mikuia = new function() {
 			var tokens = message.replace('!', '').split(' ')
 			var trigger = tokens[0].toLowerCase()
 
-			var commandObject = this.getChannel(channel).getCommand(trigger)
+			if(trigger == 'mikuia') {
+				var commandObject = { command: 'mikuia.about' }
+				var command = commandObject.command
+				var pl = 'base'
+			} else {
+				var commandObject = this.getChannel(channel).getCommand(trigger)
+				var command = commandObject.command
+				var pl = this.getChannel(channel).getPlugin(this.commands[command].plugin)
+			}
 
 			if(commandObject != false) {
 				var command = commandObject.command
-				var pl = this.getChannel(channel).getPlugin(this.commands[command].plugin)
 				if(!_.isUndefined(pl)) {
-					this.plugins[this.commands[command].plugin].handleCommand(command, tokens, from, channel)
+					this.plugins[this.commands[command].plugin].handleCommand(command, tokens, from, Mikuia.getChannel(channel))
 				}
 			}
 		} else {
 			_.each(self.hooks.chat, function(pluginName) {
-				if(self.channels[channel].plugins[pluginName] != undefined) {
-					self.plugins[pluginName].handleMessage(from, channel, message)
+				if(self.getChannel(channel).hasPlugin(pluginName)) {
+					self.plugins[pluginName].handleMessage(from, Mikuia.getChannel(channel), message)
 				}
 			})
 		}
@@ -167,71 +174,6 @@ var Mikuia = new function() {
 	}
 
 	this.refreshViewers = refreshViewers
-
-	this.update = function(channelName) {
-		var self = this
-		self.channels['#' + channelName] = {
-			commands: {},
-			display_name: channelName,
-			plugins: {}
-		}
-		self.channels2[channelName] = new Channel(channelName)
-		redis.smembers('channel:' + channelName + ':plugins', function(err, plugins) {
-			if(err) {
-				self.log(self.LogStatus.Error, 'Failed to get a list of plugins for ' + channelName + '.')
-			}
-			_.each(plugins, function(pluginName) {
-				self.channels['#' + channelName].plugins[pluginName] = {}
-				redis.get('channel:' + channelName + ':plugin:' + pluginName + ':settings', function(err2, settings) {
-					if(err2) {
-						self.log(self.LogStatus.Error, 'Failed to get a settings for plugin ' + pluginName + ' for channel ' + channelName + '.')
-					} else {
-						try {
-							self.channels['#' + channelName].plugins[pluginName].settings = JSON.parse(settings)
-						} catch(e) {
-							self.log(self.LogStatus.Error, 'Failed to parse settings for plugin ' + pluginName + ' for channel ' + channelName + '.')
-						}
-						if(self.enabled[pluginName].indexOf('#' + channelName) == -1) {
-							self.enabled[pluginName].push('#' + channelName)
-							if(self.hooks.enable.indexOf(pluginName) > -1) {
-								self.plugins[pluginName].load('#' + channelName)
-							}
-						}
-					}
-				})
-			})
-		})
-		redis.smembers('channel:' + channelName + ':commands', function(err, commands) {
-			if(err) {
-				self.log(self.LogStatus.Error, 'Failed to get commands for channel ' + channelName + '.')
-			} else {
-				_.each(commands, function(commandName) {
-					redis.get('channel:' + channelName + ':command:' + commandName, function(err2, command) {
-						if(err2) {
-							self.log(self.LogStatus.Error, 'Failed to get info for command ' + commandName + ' for channel ' + channelName + '.')
-						} else {
-							try {
-								self.channels['#' + channelName].commands[commandName] = JSON.parse(command)
-							} catch(e) {
-								self.log(self.LogStatus.Error, 'Failed to parse JSON info for command ' + commandName + ' for channel ' + channelName + '.')
-							}
-							redis.get('channel:' + channelName + ':command:' + commandName + ':settings', function(err3, settings) {
-								if(err3) {
-									self.log(self.LogStatus.Error, 'Failed to get settings for command ' + commandName + ' for channel ' + channelName + '.')
-								} else {
-									try {
-										self.channels['#' + channelName].commands[commandName].settings = JSON.parse(settings)
-									} catch(e) {
-										self.log(self.LogStatus.Error, 'Failed to parse JSON settings for command ' + commandName + ' for channel ' + channelName + '.')
-									}
-								}
-							})
-						}
-					})
-				})
-			}
-		})
-	}
 }
 
 var channel = require('./models/Channel')
@@ -295,7 +237,7 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 			rollbar.handleUncaughtExceptions(Mikuia.settings.plugins.base.rollbarToken, { exitOnCaughtException: false })
 			fs.writeFileSync('settings.json', JSON.stringify(Mikuia.settings, null, '\t'))
 			Mikuia.runHooks('10s')
-			Mikuia.runHooks('1h')
+			//Mikuia.runHooks('1h')
 			www.init(Mikuia)
 		})
 	})
@@ -353,7 +295,6 @@ function initTwitch() {
 			if(!redisErr) {
 				async.each(channels, function loadChannel(channelName, callback) {
 					Mikuia.joinChannel(channelName)
-					Mikuia.update(channelName)
 					callback()
 				}, function loadChannelsEnd(err) {
 					if(err) {
@@ -389,13 +330,12 @@ function refreshViewers() {
 			Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get channel list from Redis for refreshing viewers.')
 		} else {
 			async.each(channels, function(channel, callback) {
-				twitch._get('streams/' + channel, function(err, stream) {
-					if(!err && stream.req.res.body != undefined) {
-						if(stream.req.res.body.stream != null) {
-							//console.log(stream.req.res.body.stream)
-							Mikuia.channels['#' + channel].display_name = stream.req.res.body.stream.channel.display_name
-							Mikuia.streams['#' + channel] = stream.req.res.body.stream
-							redis.zadd('viewers', stream.req.res.body.stream.viewers, channel)
+				Mikuia.getChannel(channel).getStream(function(err, stream) {
+					if(!err) {
+						if(stream != null) {
+							Mikuia.getChannel(channel).setDisplayName(stream.channel.display_name)
+							Mikuia.streams['#' + channel] = stream
+							redis.zadd('viewers', stream.viewers, channel)
 						} else {
 							delete Mikuia.streams['#' + channel]
 							redis.zrem('viewers', channel)

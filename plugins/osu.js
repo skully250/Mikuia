@@ -77,10 +77,12 @@ exports.manifest = {
 	settings: {
 		channel: {
 			info: {
+				default: false,
 				description: 'Show beatmap info for links on chat.',
 				type: 'radio'
 			},
 			events: {
+				default: false,
 				description: 'Show events and rank changes on chat.',
 				type: 'radio'
 			},
@@ -97,6 +99,7 @@ exports.manifest = {
 				type: 'text'
 			},
 			requests: {
+				default: false,
 				description: 'Pass all map links through osu! chat (requests without a command).',
 				type: 'radio'
 			},
@@ -115,7 +118,7 @@ exports.manifest = {
 	}
 }
 
-function checkForMap(from, channel, message, callback) {
+function checkForMap(from, Channel, message, callback) {
 	if(/osu.ppy.sh\/(b|s)\/(\d+)/g.test(message)) {
 		var results = /osu.ppy.sh\/(b|s)\/(\d+)/g.exec(message)
 		var response = {}
@@ -127,32 +130,26 @@ function checkForMap(from, channel, message, callback) {
 	}
 }
 
-function sendRequest(channel, from, map, link) {
+function sendRequest(Channel, from, map, link) {
 	var areWeSending = true
-	var settings = Mikuia.getChannel(channel).plugins.osu.settings
-	if(settings != undefined && settings != null) {
-		if(settings.requestLimit) {
-			if(lastRequest[from] && (new Date).getTime() < lastRequest[from] + settings.requestLimit * 60000) {
-				areWeSending = false
-			} else {
-				lastRequest[from] = (new Date).getTime()
-			}
-		}
-	} else {
+	if(lastRequest[from] && (new Date).getTime() < lastRequest[from] + Channel.getSetting('osu', 'requestLimit') * 60000) {
 		areWeSending = false
+	} else {
+		lastRequest[from] = (new Date).getTime()
 	}
-	if(areWeSending && !_.isUndefined(map)) {
+	if(areWeSending && !_.isUndefined(map) && Channel.getSetting('osu', 'name') != '') {
 		var escapedArtist = map.artist.split('(').join('{').split(')').join('}')
 		var escapedTitle = map.title.split('(').join('{').split(')').join('}')
 		var escapedVersion = map.version.split('(').join('{').split(')').join('}')
 		banchoRateLimiter.removeTokens(1, function(err, remainingRequests) {
-			bancho.say(settings.name, 'New request from ' + from + ': (' + escapedArtist + ' - ' + escapedTitle + ' [' + escapedVersion + '])[http://' + link + ']')
+			console.log('banchosay - ' + Channel.getSetting('osu', 'name'))
+			bancho.say(Channel.getSetting('osu', 'name'), 'New request from ' + from + ': (' + escapedArtist + ' - ' + escapedTitle + ' [' + escapedVersion + '])[http://' + link + ']')
 			Mikuia.log(Mikuia.LogStatus.Warning, 'osu - Remaining tokens: ' + remainingRequests)
 		})
 	}
 }
 
-function showInfo(channel, map) {
+function showInfo(Channel, map) {
 	var status
 	switch(map.approved) {
 		case "-2":
@@ -174,10 +171,10 @@ function showInfo(channel, map) {
 			status = "Qualified"
 			break
 	}
-	Mikuia.say(channel, '[' + status + '] ' + map.artist + ' - ' + map.title + ' - [' + map.version + '] (by ' + map.creator + '), ' + Math.round(map.bpm) + ' BPM, ' + (Math.round(map.difficultyrating * 100) / 100) + ' stars')
+	Mikuia.say(Channel.getIRCName(), '[' + status + '] ' + map.artist + ' - ' + map.title + ' - [' + map.version + '] (by ' + map.creator + '), ' + Math.round(map.bpm) + ' BPM, ' + (Math.round(map.difficultyrating * 100) / 100) + ' stars')
 }
 
-exports.handleCommand = function(command, tokens, from, channel) {
+exports.handleCommand = function(command, tokens, from, Channel) {
 	switch(command) {
 		case 'osu.rank':
 		case 'osu.rank.ctb':
@@ -193,25 +190,23 @@ exports.handleCommand = function(command, tokens, from, channel) {
 				tokens.splice(0, 1)
 				var user = tokens.join(' ')
 			} else {
-				if(Mikuia.channels[channel].plugins.osu.settings) {
-					var user = Mikuia.channels[channel].plugins.osu.settings.name
-				}
+				var user = Channel.getSetting('osu', 'name')
 			}
-			if(user != undefined) {
+			if(user != undefined && user != '') {
 				osu.getUser(user, modes[command], function(err, user) {
 					if(!err && !_.isEmpty(user)) {
-						Mikuia.say(channel, 'Stats for ' + user.username + ': ' + user.pp_raw + 'pp, rank: #' + user.pp_rank)
+						Mikuia.say(Channel.getIRCName(), 'Stats for ' + user.username + ': ' + user.pp_raw + 'pp, rank: #' + user.pp_rank)
 					}
 				})
 			}
 			break
 		case 'osu.request':
 			if(!_.isUndefined(tokens[1])) {
-				checkForMap(from, channel, tokens[1], function(err, map, link) {
+				checkForMap(from, Channel, tokens[1], function(err, map, link) {
 					if(!err) {
-						sendRequest(channel, from, map, link)
-						if(Mikuia.channels[channel].plugins.osu.settings.info) {
-							showInfo(channel, map)
+						sendRequest(Channel, from, map, link)
+						if(Channel.getSetting('osu', 'info')) {
+							showInfo(Channel, map)
 						}
 					}
 				})
@@ -222,16 +217,14 @@ exports.handleCommand = function(command, tokens, from, channel) {
 				tokens.splice(0, 1)
 				var user = tokens.join(' ')
 			} else {
-				if(Mikuia.channels[channel].plugins.osu.settings) {
-					var user = Mikuia.channels[channel].plugins.osu.settings.name
-				}
+				var user = Channel.getSetting('osu', 'name')
 			}
-			if(user != undefined) {
+			if(user != undefined && user != '') {
 
 				var continueTp = function(userId, username) {
 					osu.getTpUser(userId, function(err, user) {
 						if(!err && !_.isEmpty(user)) {
-							Mikuia.say(channel, 'osu!tp stats for ' + username + ': ' + user.rating + 'tp, rank: #' + user.rank + '\nAim: ' + user.aimrating + ' Spd: ' + user.speedrating + ' Acc: ' + user.accrating)
+							Mikuia.say(Channel.getIRCName(), 'osu!tp stats for ' + username + ': ' + user.rating + 'tp, rank: #' + user.rank + '\nAim: ' + user.aimrating + ' Spd: ' + user.speedrating + ' Acc: ' + user.accrating)
 						}
 					})
 				}
@@ -250,20 +243,18 @@ exports.handleCommand = function(command, tokens, from, channel) {
 	}
 }
 
-exports.handleMessage = function(from, channel, message) {
-	if(Mikuia.channels[channel].plugins.osu.settings) {
-		if(Mikuia.channels[channel].plugins.osu.settings.info || Mikuia.channels[channel].plugins.osu.settings.requests) {
-			checkForMap(from, channel, message, function(err, map, link) {
-				if(!err) {
-					if(Mikuia.channels[channel].plugins.osu.settings.requests) {
-						sendRequest(channel, from, map, link)
-					}
-					if(Mikuia.channels[channel].plugins.osu.settings.info) {
-						showInfo(channel, map)
-					}
+exports.handleMessage = function(from, Channel, message) {
+	if(Channel.getSetting('osu', 'info') || Channel.getSetting('osu', 'requests')) {
+		checkForMap(from, Channel, message, function(err, map, link) {
+			if(!err) {
+				if(Channel.getSetting('osu', 'requests')) {
+					sendRequest(Channel, from, map, link)
 				}
-			})
-		}
+				if(Channel.getSetting('osu', 'info')) {
+					showInfo(Channel, map)
+				}
+			}
+		})
 	}
 }
 
@@ -298,9 +289,9 @@ exports.init = function(m) {
 	})
 }
 
-exports.load = function(channel) {
-	if(Mikuia.channels[channel].plugins.osu.settings && Mikuia.channels[channel].plugins.osu.settings.name) {
-		osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, 0, function(err, user) {			
+exports.load = function(Channel) {
+	if(Channel.getSetting('osu', 'name') != '') {
+		osu.getUser(Channel.getSetting('osu', 'name'), 0, function(err, user) {			
 			if(!err && !_.isEmpty(user)) {
 				userData[user.username] = {}
 				userData[user.username].user_id = user.user_id
@@ -331,25 +322,28 @@ exports.runHook = function(hookName) {
 
 				// BRACE FOR THE IMPACT
 				if(canWeDoIt) {
-					if(!_.isUndefined(Mikuia.channels[channel]) && Mikuia.channels[channel].plugins.osu.settings) {
-						if(Mikuia.channels[channel].plugins.osu.settings.events) {
-							osu.getUser(Mikuia.channels[channel].plugins.osu.settings.name, 0, function(err, user) {
+
+					var Channel = Mikuia.getChannel(channel)
+
+					if(Channel.getSetting('osu', 'name') != '') {
+						if(Channel.getSetting('osu', 'events')) {
+							osu.getUser(Channel.getSetting('osu', 'name'), 0, function(err, user) {
 								if(!err && !_.isEmpty(user) && !_.isUndefined(userData[user.username]) && userData[user.username].pp != 0) {
 									if(userData[user.username].pp != user.pp_raw) {
 										var diff = Math.round((user.pp_raw - userData[user.username].pp) * 100) / 100
 										var rnk = user.pp_rank - userData[user.username].rank
 
 										if(diff > 0) {
-											Mikuia.say(channel, '+' + diff + 'pp!')
-											Mikuia.log(Mikuia.LogStatus.Normal, cli.greenBright(Mikuia.channels[channel].plugins.osu.settings.name) + ' gained ' + cli.yellowBright('+' + diff + 'pp') + '.')
+											Mikuia.say(Channel.getIRCName(), '+' + diff + 'pp!')
+											Mikuia.log(Mikuia.LogStatus.Normal, cli.greenBright(Channel.getSetting('osu', 'name')) + ' gained ' + cli.yellowBright('+' + diff + 'pp') + '.')
 										} else {
-											Mikuia.say(channel, diff + 'pp!')
+											Mikuia.say(Channel.getIRCName(), diff + 'pp!')
 										}
 
 										if(rnk > 0) {
-											Mikuia.say(channel, 'Rank: #' + user.pp_rank + ' (' + rnk +' down)')
+											Mikuia.say(Channel.getIRCName(), 'Rank: #' + user.pp_rank + ' (' + rnk +' down)')
 										} else if(rnk < 0) {
-											Mikuia.say(channel, 'Rank: #' + user.pp_rank + ' (' + Math.abs(rnk) +' up!)')
+											Mikuia.say(Channel.getIRCName(), 'Rank: #' + user.pp_rank + ' (' + Math.abs(rnk) +' up!)')
 										}
 									}
 
@@ -359,18 +353,14 @@ exports.runHook = function(hookName) {
 											var string = _.stripTags(user.events[0].display_html).trim()
 											var tokens = /.*?(\d+)/.exec(string)
 
-											var minRank = 1000
-
-											if(Mikuia.channels[channel].plugins.osu.settings.minimumRank) {
-												minRank = Mikuia.channels[channel].plugins.osu.settings.minimumRank
-											}
+											minRank = Channel.getSetting('osu', 'minimumRank')
 
 											if(tokens) {
 												if(tokens[1] <= minRank) {
-													Mikuia.say(channel, string)
+													Mikuia.say(Channel.getIRCName(), string)
 												}
 											} else {
-												Mikuia.say(channel, string)
+												Mikuia.say(Channel.getIRCName(), string)
 											}
 
 										}
@@ -380,7 +370,7 @@ exports.runHook = function(hookName) {
 									userData[user.username].pp = user.pp_raw
 									userData[user.username].rank = user.pp_rank
 								} else {
-									Mikuia.log(Mikuia.LogStatus.Warning, 'osu! - Failed to update profile of ' + channel + ' (' + Mikuia.channels[channel].plugins.osu.settings.name + ').')
+									Mikuia.log(Mikuia.LogStatus.Warning, 'osu! - Failed to update profile of ' + channel + ' (' + Channel.getSetting('osu', 'name') + ').')
 								}
 								callback(err)
 							})

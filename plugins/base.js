@@ -44,16 +44,39 @@ exports.manifest = {
 	}
 }
 
-exports.handleCommand = function(command, tokens, from, channel) {
+exports.handleCommand = function(command, tokens, from, Channel) {
 	switch(command) {
 		case 'dummy':
-			var command = Mikuia.channels[channel].commands[tokens[0]]
+			var command = Channel.getCommand(tokens[0])
 			if(command != undefined && command.settings != null) {
-				Mikuia.say(channel, command.settings.text)
+				Mikuia.say(Channel.getIRCName(), command.settings.text)
 			}
 			break
+		case 'mikuia':
 		case 'mikuia.about':
-			Mikuia.say(channel, 'Hey, I\'m Mikuia, and I\'m a bot! Learn more about me at http://mikuia.tv/')
+			console.log(tokens)
+			if(tokens.length > 1) {
+				if(from == Mikuia.settings.plugins.base.admin.toLowerCase()) {
+					var action = tokens[1]
+
+					
+
+					switch(action) {
+						case 'run':
+							var command = tokens[2]
+							var newTokens = tokens.splice(2, 2)
+
+							Mikuia.plugins[Mikuia.commands[command].plugin].handleCommand(command, newTokens, from, Channel)
+							break
+						default:
+							Mikuia.say(Channel.getIRCName(), 'Wrong action: ' + action)
+					}
+				} else {
+					Mikuia.say(Channel.getIRCName(), 'You...you\'re not su-supposed to do that... baka...')
+				}
+			} else {
+				Mikuia.say(Channel.getIRCName(), 'Hey, I\'m Mikuia, and I\'m a bot made by Maxorq / Hatsuney! Learn more about me at http://mikuia.tv/')
+			}
 			break
 		case 'mikuia.channels':
 			if(from == Mikuia.settings.plugins.base.admin.toLowerCase()) {
@@ -64,11 +87,11 @@ exports.handleCommand = function(command, tokens, from, channel) {
 					}
 					channelList += channelName
 				})
-				Mikuia.say(channel, 'Enabled channels: ' + channelList)
+				Mikuia.say(Channel.getIRCName(), 'Enabled channels: ' + channelList)
 			}
 			break
 		case 'mikuia.donate':
-			Mikuia.say(channel, 'Aww, you want to donate? Thank you! http://bit.ly/1clkjef')
+			Mikuia.say(Channel.getIRCName(), 'Aww, you want to donate? Thank you! http://bit.ly/1clkjef')
 			break
 		case 'mikuia.plugins':
 			if(from == Mikuia.settings.plugins.base.admin.toLowerCase()) {
@@ -79,7 +102,7 @@ exports.handleCommand = function(command, tokens, from, channel) {
 					}
 					pluginList += pluginName
 				})
-				Mikuia.say(channel, 'Loaded plugins: ' + pluginList)
+				Mikuia.say(Channel.getIRCName(), 'Loaded plugins: ' + pluginList)
 			}
 			break
 	}
