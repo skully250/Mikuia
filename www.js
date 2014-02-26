@@ -90,13 +90,7 @@ exports.init = function(m) {
 
 	io.sockets.on('connection', function(socket) {
 
-		if(socket.handshake.user.username == 'hatsuney') {
-			var Channel = Mikuia.getChannel('kasugunai')
-		} else {
-			var Channel = Mikuia.getChannel(socket.handshake.user.username)
-		}
-
-		
+		var Channel = Mikuia.getChannel(socket.handshake.user.username)
 
 		socket.on('ready', function() {
 			// Yes
@@ -281,45 +275,52 @@ exports.init = function(m) {
 	}
 
 	routes.index = function(req, res) {
-		async.parallel({
-			// github: function(callback) {
-			// 	request({
-			// 		url: 'https://api.github.com/repos/Maxorq/Mikuia/commits',
-			// 		headers: {
-			// 			'User-Agent': 'Mikuia'
-			// 		}
-			// 	}, function(error, response, body) {
-			// 		if(!error && response.statusCode == 200) {
-			// 			callback(null, JSON.parse(body))
-			// 		} else {
-			// 			callback(error, null)
-			// 		}
-			// 	})
-			// },
-			redis: function(callback) {
-				redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
-					callback(err, data)
-				})
-			}
-		}, function(err, results) {
-			if(err) {
-				Mikuia.log(Mikuia.LogStatus.Error, 'Something went wrong while opening index page.')
-			}
+		// async.parallel({
+		// 	// github: function(callback) {
+		// 	// 	request({
+		// 	// 		url: 'https://api.github.com/repos/Maxorq/Mikuia/commits',
+		// 	// 		headers: {
+		// 	// 			'User-Agent': 'Mikuia'
+		// 	// 		}
+		// 	// 	}, function(error, response, body) {
+		// 	// 		if(!error && response.statusCode == 200) {
+		// 	// 			callback(null, JSON.parse(body))
+		// 	// 		} else {
+		// 	// 			callback(error, null)
+		// 	// 		}
+		// 	// 	})
+		// 	// },
+		// 	redis: function(callback) {
+		// 		redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
+		// 			callback(err, data)
+		// 		})
+		// 	}
+		// }, function(err, results) {
+			// if(err) {
+			// 	Mikuia.log(Mikuia.LogStatus.Error, 'Something went wrong while opening index page.')
+			// }
+			var channels = {}
 			var featuredChannel = {}
+			redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
+	 			if(!err && data.length > 0) {
+					featuredChannel = Mikuia.getChannel(data[data.length - 2].toLowerCase())
+	 				channels = data
+	 			}
+		 		res.render('index', {
+					//changelog: github,
+					channels: channels,
+					featuredChannel: featuredChannel,
+					streams: Mikuia.streams
+				})
+	 		})
 			//var github = {}
-			if(results.redis.length > 0) {
-				featuredChannel = Mikuia.channels['#' + results.redis[results.redis.length - 2].toLowerCase()]
-			}
+			// if(results.redis.length > 0) {
+			// }
 			// if(results.github != null) {
 			// 	github = results.github.splice(0, 14)
 			// }
-			res.render('index', {
-				//changelog: github,
-				channels: results.redis,
-				featuredChannel: featuredChannel,
-				streams: Mikuia.streams
-			})
-		})
+			
+		//})
 	}
 
 	routes.plugins = function(req, res) {

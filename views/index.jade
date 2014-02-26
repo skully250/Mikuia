@@ -76,7 +76,7 @@ block content
 			.container
 				.col-md-8
 					h1
-						| #{featuredChannel.display_name}
+						| #{featuredChannel.getDisplayName()}
 						span(style='font-size: 24px;')
 							|  is using Mikuia! 
 							.badge
@@ -84,27 +84,27 @@ block content
 								- var viewers = channels[channels.length - 1]
 								|  #{viewers}
 					h4
-						if Object.keys(featuredChannel.commands).length > 0
+						if Object.keys(featuredChannel.getCommands()).length > 0
 							b Commands: 
-							each command, commandName in featuredChannel.commands
+							each command, commandName in featuredChannel.getCommands()
 								| #{commandName} 
 							br
-						if Object.keys(featuredChannel.plugins).length > 0
+						if Object.keys(featuredChannel.getPlugins()).length > 0
 							b Plugins: 
-							each plugin, pluginName in featuredChannel.plugins
+							each pluginName in featuredChannel.getPlugins()
 								| #{pluginName} 
 				.col-md-4
-					object.index-screenshot#live_embed_player_flash(type='application/x-shockwave-flash', height='183', width='340', data='http://www.twitch.tv/widgets/live_embed_player.swf?channel=#{featuredChannel.display_name}')
+					object.index-screenshot#live_embed_player_flash(type='application/x-shockwave-flash', height='183', width='340', data='http://www.twitch.tv/widgets/live_embed_player.swf?channel=#{featuredChannel.getDisplayName()}')
 						param(name='allowFullScreen', value='true')
 						param(name='allowScriptAccess', value='always')
 						param(name='allowNetworking', value='all')
 						param(name='movie', value='http://www.twitch.tv/widgets/live_embed_player.swf')
-						param(name='flashvars', value='hostname=www.twitch.tv&channel=#{featuredChannel.display_name}&auto_play=true&start_volume=25')
+						param(name='flashvars', value='hostname=www.twitch.tv&channel=#{featuredChannel.getDisplayName()}&auto_play=true&start_volume=25')
 				if Object.keys(streams).length > 1
 					.col-md-12
 						h3 Other Streams using Mikuia
 					each stream, channel in streams
-						if stream.channel.display_name != featuredChannel.display_name
+						if stream.channel.display_name != featuredChannel.getDisplayName()
 							.col-md-3(style='font-size: 16px;')
 								a(href=stream.channel.url)
 									img(src=stream.preview.medium, width='240', height='150')
