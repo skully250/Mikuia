@@ -14,6 +14,11 @@ block content
 				.panel-body
 					span.text-muted#mikuia_status Loading Mikuia status...
 					button.btn.btn-sm.pull-right#mikuia_status_button Mikuia
+					br
+					button.btn.btn-sm.btn-warning#showApiKey Show API Key (don't show it on the stream!)
+					span#apiKey(style='display: none;')
+						b API Key: 
+						span#apiKeyString Unknown (not yet generated / failed to load)
 		#panels
 
 block footerScript
@@ -55,6 +60,11 @@ block footerScript
 			})
 		}
 
+		$('#showApiKey').click(function() {
+			this.remove()
+			$('#apiKey').fadeIn('fast')
+		})
+
 		$('#mikuia_status_button').click(function() {
 			if($('#mikuia_status_button').hasClass('btn-primary')) {
 				io.emit('settings.enable')
@@ -64,8 +74,14 @@ block footerScript
 		})
 
 		io.emit('getSettings')
+
+		io.on('apiKey', function(data) {
+			if(data.apiKey) {
+				$('#apiKeyString').text(data.apiKey)
+			}
+		})
+
 		io.on('settings', function(data) {
-			console.log(data)
 			if(data.enabled) {
 				enable()
 			} else {

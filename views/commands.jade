@@ -66,7 +66,7 @@ block footerScript
 
 			var parsedName = parseName(data.name)
 
-			$('#panels').append(
+			$('#panels').prepend(
 				'<div class="col-md-6" style="display: none;" id="command_' + data.name + '"> \
 					<div class="panel panel-default"> \
 						<div class="panel-heading">' + data.name + '</div> \
@@ -89,6 +89,9 @@ block footerScript
 					}
 					$('#command_' + parsedName + '_arguments').append('<b>' + argumentKey + '</b> - ' + argument.description)
 				}
+			}
+			if(commands[data.command].guide != undefined) {
+				$('#command_' + parsedName + ' .panel-heading').append('<a href="/command/' + data.command + '" class="btn btn-warning btn-xs pull-right">View the guide for this command</a>')
 			}
 			if(commands[data.command].settings != undefined) {
 				if(data.settings != undefined) {

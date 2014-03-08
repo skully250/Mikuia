@@ -10,6 +10,7 @@ var _
 
 var banchoRateLimiter
 var lastRequest = {}
+var npData = {}
 var userData = {}
 
 exports.manifest = {
@@ -18,6 +19,10 @@ exports.manifest = {
 	type: 'channel',
 	description: 'Plugin for osu!',
 	commands: {
+		'osu.np': {
+			description: 'Shows the name of currently played song.',
+			guide: true
+		},
 		'osu.rank': {
 			description: 'Shows the rank of a player. (osu!)',
 			arguments: {
@@ -125,6 +130,7 @@ function checkForMap(from, Channel, message, callback) {
 		var status = ""
 		Mikuia.log(Mikuia.LogStatus.Normal, 'Getting info for ' + cli.greenBright('/' + results[1] + '/' + results[2]))
 		osu.getBeatmap(results[2], results[1], function(err, map) {
+			console.log('Error is: ' + err + ' and map is ' + map + ' and results[0] is ' + results[0])
 			callback(err, map, results[0])
 		})
 	}
@@ -142,40 +148,45 @@ function sendRequest(Channel, from, map, link) {
 		var escapedTitle = map.title.split('(').join('{').split(')').join('}')
 		var escapedVersion = map.version.split('(').join('{').split(')').join('}')
 		banchoRateLimiter.removeTokens(1, function(err, remainingRequests) {
-			console.log('banchosay - ' + Channel.getSetting('osu', 'name'))
 			bancho.say(Channel.getSetting('osu', 'name'), 'New request from ' + from + ': (' + escapedArtist + ' - ' + escapedTitle + ' [' + escapedVersion + '])[http://' + link + ']')
-			Mikuia.log(Mikuia.LogStatus.Warning, 'osu - Remaining tokens: ' + remainingRequests)
 		})
 	}
 }
 
 function showInfo(Channel, map) {
-	var status
-	switch(map.approved) {
-		case "-2":
-			status = "Graveyard"
-			break
-		case "-1":
-			status = "WIP"
-			break
-		case "0":
-			status = "Pending"
-			break
-		case "1":
-			status = "Ranked"
-			break
-		case "2":
-			status = "Approved"
-			break
-		case "3":
-			status = "Qualified"
-			break
+	var status = 'Unknown'
+	if(map.approved != undefined) {
+		switch(map.approved) {
+			case "-2":
+				status = "Graveyard"
+				break
+			case "-1":
+				status = "WIP"
+				break
+			case "0":
+				status = "Pending"
+				break
+			case "1":
+				status = "Ranked"
+				break
+			case "2":
+				status = "Approved"
+				break
+			case "3":
+				status = "Qualified"
+				break
+		}
 	}
 	Mikuia.say(Channel.getIRCName(), '[' + status + '] ' + map.artist + ' - ' + map.title + ' - [' + map.version + '] (by ' + map.creator + '), ' + Math.round(map.bpm) + ' BPM, ' + (Math.round(map.difficultyrating * 100) / 100) + ' stars')
 }
 
 exports.handleCommand = function(command, tokens, from, Channel) {
 	switch(command) {
+		case 'osu.np':
+			if(npData[Channel.getName()] != undefined) {
+				Mikuia.say(Channel.getIRCName(), 'Now playing: ' + npData[Channel.getName()])
+			}
+			break
 		case 'osu.rank':
 		case 'osu.rank.ctb':
 		case 'osu.rank.osumania':
@@ -224,7 +235,8 @@ exports.handleCommand = function(command, tokens, from, Channel) {
 				var continueTp = function(userId, username) {
 					osu.getTpUser(userId, function(err, user) {
 						if(!err && !_.isEmpty(user)) {
-							Mikuia.say(Channel.getIRCName(), 'osu!tp stats for ' + username + ': ' + user.rating + 'tp, rank: #' + user.rank + '\nAim: ' + user.aimrating + ' Spd: ' + user.speedrating + ' Acc: ' + user.accrating)
+							Mikuia.say(Channel.getIRCName(), 'osu!tp stats for ' + username + ': ' + user.rating + 'tp, rank: #' + user.rank)
+							Mikuia.say(Channel.getIRCName(), 'Aim: ' + user.aimrating + ' Spd: ' + user.speedrating + ' Acc: ' + user.accrating)
 						}
 					})
 				}
@@ -252,6 +264,16 @@ exports.handleMessage = function(from, Channel, message) {
 				}
 				if(Channel.getSetting('osu', 'info')) {
 					showInfo(Channel, map)
+				}
+			} else {
+				var newMap = {
+					approved: -1,
+					artist: 'Unknown',
+					title: 'Unknown',
+					version: 'osu!api connection problem'
+				}
+				if(Channel.getSetting('osu', 'requests')) {
+					sendRequest(Channel, from, newMap, link)
 				}
 			}
 		})
@@ -287,6 +309,39 @@ exports.init = function(m) {
 	bancho.on('motd', function(motd) {
 		Mikuia.log(Mikuia.LogStatus.Normal, 'Received osu!Bancho MOTD.')
 	})
+
+	Mikuia.www.getApp().post('/plugins/osu/post/:username', function(req, res) {
+
+		var Channel = Mikuia.getChannelIfExists(req.params.username)
+
+		console.log(req.body.key)
+		console.log(Channel.getInfo('apiKey'))
+
+		if(Channel && req.body.key != undefined && Channel.getInfo('apiKey') == req.body.key) {
+			var data = req.body
+
+			if(data.mapName != undefined) {
+				// osu!Post
+				npData[Channel.getName()] = data.mapName
+			} else if(data.primary != undefined) {
+				// osu!np
+				npData[Channel.getName()] = data.primary + ' - ' + data.secondary
+			} else {
+				npData[Channel.getName()] = 'NoMap'
+			}
+
+			if(npData[Channel.getName()] == '- - -' || npData[Channel.getName()] == 'NoMap') {
+				npData[Channel.getName()] = '-'
+			}
+
+			console.log('New np for ' + Channel.getName() + ' is: ' + npData[Channel.getName()])
+
+		}
+
+
+
+		res.send(200)
+	})
 }
 
 exports.load = function(Channel) {
@@ -300,6 +355,7 @@ exports.load = function(Channel) {
 			}
 		})
 	}
+	npData[Channel.getName()] = '-'
 }
 
 exports.runHook = function(hookName) {
@@ -311,7 +367,7 @@ exports.runHook = function(hookName) {
 				// Holy shit, this is going to be a complete hate-fest.
 				var canWeDoIt
 				if(hookName == '10s') {
-					if(channel in Mikuia.streams) {
+					if('#' + channel in Mikuia.streams) {
 						canWeDoIt = true
 					} else {
 						canWeDoIt = false
@@ -322,9 +378,7 @@ exports.runHook = function(hookName) {
 
 				// BRACE FOR THE IMPACT
 				if(canWeDoIt) {
-
 					var Channel = Mikuia.getChannel(channel)
-
 					if(Channel.getSetting('osu', 'name') != '') {
 						if(Channel.getSetting('osu', 'events')) {
 							osu.getUser(Channel.getSetting('osu', 'name'), 0, function(err, user) {

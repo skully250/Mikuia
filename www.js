@@ -1,4 +1,4 @@
-var app, async, connect, express, io, Mikuia, passport, passportIo, redis, RedisStore, request, server, twitch, _
+var app, async, connect, express, fs, io, Mikuia, passport, passportIo, redis, RedisStore, request, server, twitch, _
 
 function ensureAuthenticated(req, res, next) {
 	if(req.isAuthenticated()) {
@@ -9,11 +9,16 @@ function ensureAuthenticated(req, res, next) {
 	})
 }
 
+exports.getApp = function() {
+	return app
+}
+
 exports.init = function(m) {
 	Mikuia = m
 	async = require('async')
 	connect = require('connect')
 	express = require('express')
+	fs = require('fs')
 	passport = require('passport')
 	passportIo = require('passport.socketio')
 	redis = Mikuia.modules.redis
@@ -47,6 +52,7 @@ exports.init = function(m) {
 			accept(null, !error)
 		}
 	}))
+	io.set('log level', 1)
 
 	passport.deserializeUser(function(obj, done) {
 		done(null, obj)
@@ -149,11 +155,13 @@ exports.init = function(m) {
 			})
 
 			_.each(Channel.getCommands(), function(element, key, list) {
-				socket.emit('commands:add', {
-					name: key,
-					command: element.command,
-					settings: element.settings
-				})
+				if(_.isObject(element) && element.command != undefined) {
+					socket.emit('commands:add', {
+						name: key,
+						command: element.command,
+						settings: element.settings
+					})
+				}
 			})
 		})
 
@@ -162,6 +170,9 @@ exports.init = function(m) {
 				if(!err) {
 					socket.emit('settings', {
 						enabled: enabled
+					})
+					socket.emit('apiKey', {
+						apiKey: Channel.getInfo('apiKey')
 					})
 					if(enabled) {
 						var plugins = {}
@@ -256,6 +267,15 @@ exports.init = function(m) {
 		res.render('channels')
 	}
 
+	routes.command = function(req, res) {
+		var file = req.params.command.replace('.', '_')
+		if(req.params.command != undefined && fs.existsSync('views/commands/' + file + '.jade')) {
+			res.render('commands/' + file)
+		} else {
+			res.render('error')
+		}
+	}
+
 	routes.commands = function(req, res) {
 		res.render('commands')
 	}
@@ -346,6 +366,8 @@ exports.init = function(m) {
 	app.get('/channels', routes.channels)
 	app.get('/ajax/channels', routes.channels)
 	app.get('/channels', routes.channels)
+	app.get('/command/:command', routes.command)
+	app.get('/ajax/command/:command', routes.command)
 	app.get('/commands', ensureAuthenticated, routes.commands)
 	app.get('/ajax/commands', ensureAuthenticated, routes.commands)
 	app.get('/guide', routes.guide)
@@ -369,11 +391,5 @@ exports.init = function(m) {
 
 	app.get('/alive', function(req, res) {
 		res.send('Yes.')
-	})
-
-	app.post('/post', function(req, res) {
-		Mikuia.log(Mikuia.LogStatus.Normal, 'Incoming played track!')
-		console.log(req.body)
-		res.send(200)
 	})
 }

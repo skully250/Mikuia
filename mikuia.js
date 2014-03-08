@@ -22,6 +22,10 @@ var www = require('./www')
 
 var twitchRateLimit = new limiter(10, 30000)
 
+process.on('uncaughtException', function(err) {
+	console.error(err)
+})
+
 var Mikuia = new function() {
 	
 	this.LogStatus = {
@@ -62,10 +66,24 @@ var Mikuia = new function() {
 		plugins: {}
 	}
 	this.streams = {}
+	this.www = www
+	this.viewers = {}
+
+	this.addViewer = function(viewerName, channelName) {
+		if(_.isUndefined(this.viewers[viewerName])) {
+			this.viewers[viewerName] = []
+		}
+		if(this.viewers[viewerName].indexOf(channelName) == -1) {
+			this.viewers[viewerName].push(channelName)
+		}
+	}
 
 	this.getChannel = function(channelName) {
-		if(!_.isUndefined(channelName) && channelName.indexOf('#') == 0) {
-			channelName = channelName.replace('#', '')
+		if(!_.isUndefined(channelName)) {
+			channelName = channelName.toLowerCase()
+			if(channelName.indexOf('#') == 0) {
+				channelName = channelName.replace('#', '')
+			}
 		}
 
 		if(channelName in this.channels2) {
@@ -73,6 +91,21 @@ var Mikuia = new function() {
 		} else {
 			this.channels2[channelName] = new Channel(channelName)
 			return this.channels2[channelName]
+		}
+	}
+
+	this.getChannelIfExists = function(channelName) {
+		if(!_.isUndefined(channelName)) {
+			channelName = channelName.toLowerCase()
+			if(channelName.indexOf('#') == 0) {
+				channelName = channelName.replace('#', '')
+			}
+		}
+
+		if(channelName in this.channels2) {
+			return this.channels2[channelName]
+		} else {
+			return false
 		}
 	}
 
@@ -92,8 +125,10 @@ var Mikuia = new function() {
 				var pl = 'base'
 			} else {
 				var commandObject = this.getChannel(channel).getCommand(trigger)
-				var command = commandObject.command
-				var pl = this.getChannel(channel).getPlugin(this.commands[command].plugin)
+				if(commandObject != false) {
+					var command = commandObject.command
+					var pl = this.getChannel(channel).getPlugin(this.commands[command].plugin)
+				}
 			}
 
 			if(commandObject != false) {
@@ -138,10 +173,19 @@ var Mikuia = new function() {
 		}
 	}
 
+	this.removeViewer = function(viewerName, channelName) {
+		if(!_.isUndefined(this.viewers[viewerName])) {
+			if(this.viewers[viewerName].indexOf(channelName) > -1) {
+				var index = this.viewers[viewerName].indexOf(channelName)
+				this.viewers[viewerName].splice(index, 1)
+			}
+		}
+	}
+
 	this.say = function(target, message) {
 		twitchRateLimit.removeTokens(1, function(err, remainingRequests) {
 			client.say(target, message)
-			Mikuia.log(Mikuia.LogStatus.Warning, 'Remaining tokens: ' + remainingRequests)
+			Mikuia.log(Mikuia.LogStatus.Normal, '(' + cli.greenBright(target) + ') ' + cli.magentaBright('mikuia') + ' (' + cli.magenta(Math.round(remainingRequests)) + '): ' + cli.whiteBright(message))
 		})
 	}
 
@@ -195,6 +239,7 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 			auth_pass: Mikuia.settings.plugins.base.redisPassword
 		})
 		redis = Mikuia.modules.redis
+		www.init(Mikuia)
 	}
 	fs.readdir('plugins', function(err, files) {
 		if(err) {
@@ -238,7 +283,6 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 			fs.writeFileSync('settings.json', JSON.stringify(Mikuia.settings, null, '\t'))
 			Mikuia.runHooks('10s')
 			//Mikuia.runHooks('1h')
-			www.init(Mikuia)
 		})
 	})
 })
@@ -310,6 +354,35 @@ function initTwitch() {
 	client.on('message#', function(nick, to, text, message) {
 		Mikuia.handleMessage(nick, to, text)
 		Mikuia.log(Mikuia.LogStatus.Normal, '(' + cli.greenBright(to) + ') ' + cli.yellowBright(nick) + ': ' + cli.whiteBright(text))
+	})
+
+	client.on('names', function(channel, nicks) {
+		Mikuia.getChannel(channel).setIRCUsers(nicks)
+		_.each(nicks, function(element, key, value) {
+			Mikuia.addViewer(key, channel)
+		})
+	})
+
+	client.on('join', function(channel, nick, message) {
+		Mikuia.getChannel(channel).addIRCUser(nick, '')
+		Mikuia.addViewer(nick, channel)
+	})
+
+	client.on('part', function(channel, nick, reason, message) {
+		Mikuia.getChannel(channel).removeIRCUser(nick)
+		Mikuia.removeViewer(nick, channel)
+	})
+
+	client.on('+mode', function(channel, by, mode, argument, message) {
+		if(mode == 'o') {
+			Mikuia.getChannel(channel).addIRCUser(message.args[2], '+')
+		}
+	})
+
+	client.on('-mode', function(channel, by, mode, argument, message) {
+		if(mode == 'o') {
+			Mikuia.getChannel(channel).addIRCUser(message.args[2], '')
+		}
 	})
 
 	refreshViewers()

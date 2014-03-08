@@ -38,7 +38,6 @@ osu.prototype.getBeatmap = function(beatmapId, type, callback) {
 				callback(true, 'osu - Failed to get /' + type + '/' + beatmapId + ' JSON.')
 			}
 		})
-		console.log('osu!api tokens left: ' + remainingRequests)
 	})
 }
 
@@ -83,7 +82,6 @@ osu.prototype.getUser = function(user, mode, callback) {
 				callback(true, 'osu - Failed to get /u/' + user + ' JSON.')
 			}
 		})
-		console.log('osu!api tokens left: ' + remainingRequests)
 	})
 }
 

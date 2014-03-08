@@ -8,11 +8,17 @@ exports.init = function(m) {
 exports.class = function(channelName) {
 	this.commands = {}
 	this.displayName = channelName
+	this.info = {}
 	this.name = channelName
 	this.plugins = {}
+	this.users = {}
 
 	this.addCommand = function(commandName, command, callback) {
 		var self = this
+		this.commands[commandName] = {
+			command: command,
+			settings: {}
+		}
 		Mikuia.modules.redis.sadd('channel:' + this.getName() + ':commands', commandName, function(err, reply) {
 			if(err) {
 				Mikuia.log(Mikuia.LogStatus.Error, 'Failed to add command ' + commandName + ' to channel ' + this.getName() + '.')
@@ -29,6 +35,10 @@ exports.class = function(channelName) {
 				})
 			}
 		})
+	}
+
+	this.addIRCUser = function(nick, mode) {
+		this.users[nick] = mode
 	}
 
 	this.addPlugin = function(pluginName, callback) {
@@ -70,8 +80,28 @@ exports.class = function(channelName) {
 		return this.displayName
 	}
 
+	this.getInfo = function(infoName) {
+		if(infoName in this.info) {
+			return this.info[infoName]
+		} else {
+			return false
+		}
+	}
+
 	this.getIRCName = function() {
 		return '#' + this.getName()
+	}
+
+	this.getIRCUsers = function() {
+		return this.users
+	}
+
+	this.getIRCUser = function(user) {
+		if(user in this.users) {
+			return this.users[user]
+		} else {
+			return false
+		}
 	}
 
 	this.getName = function() {
@@ -157,6 +187,29 @@ exports.class = function(channelName) {
 				Mikuia.log(Mikuia.LogStatus.Error, 'Failed to load a list of commands for channel ' + self.getName())
 			}
 		})
+		Mikuia.modules.redis.get('channel:' + this.getName() + ':info', function(err, info) {
+			if(!err) {
+				try {
+					var data = JSON.parse(info)
+				} catch(e) {
+					Mikuia.log(Mikuia.LogStatus.Error, 'Failed to parse JSON info for channel ' + self.getName())
+				}
+				if(_.isObject(data)) {
+					self.info = data
+				}
+				if(!self.getInfo('apiKey')) {
+					var newKey = Array.apply(0, Array(32)).map(function() {
+					    return(function(charset) {
+					        return charset.charAt(Math.floor(Math.random() * charset.length))
+					    }('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'))
+					}).join('')
+
+					self.setInfo('apiKey', newKey)
+				}
+			} else {
+				Mikuia.log(Mikuia.LogStatus.Error, 'Failed to load info for channel ' + self.getName())
+			}
+		})
 	}
 
 	this.loadCommand = function(commandName) {
@@ -170,11 +223,13 @@ exports.class = function(channelName) {
 				}
 				Mikuia.modules.redis.get('channel:' + self.getName() + ':command:' + commandName + ':settings', function(err2, settings) {
 					if(!err2) {
-						try {
-							self.commands[commandName].settings = JSON.parse(settings)
-						} catch(e) {
-							Mikuia.log(Mikuia.LogStatus.Error, 'Failed to parse settings for command ' + commandName + ' for channel ' + self.getName() + '.')
-						}
+						if(settings != null) {
+							try {
+								self.commands[commandName].settings = JSON.parse(settings)
+							} catch(e) {
+								Mikuia.log(Mikuia.LogStatus.Error, 'Failed to parse settings for command ' + commandName + ' for channel ' + self.getName() + '.')
+							}
+						}						
 					} else {
 						Mikuia.log(Mikuia.LogStatus.Error, 'Failed to load settings for command ' + commandName + ' for channel ' + self.getName() + '.')
 					}
@@ -199,7 +254,7 @@ exports.class = function(channelName) {
 				if(Mikuia.enabled[pluginName].indexOf(self.getName()) == -1) {
 					Mikuia.enabled[pluginName].push(self.getName())
 					if(Mikuia.hooks.enable.indexOf(pluginName) > -1) {
-						//Mikuia.plugins[pluginName].load(this.getName())
+						Mikuia.plugins[pluginName].load(self)
 					}
 				}
 			} else {
@@ -229,6 +284,10 @@ exports.class = function(channelName) {
 		})
 	}
 
+	this.removeIRCUser = function(nick) {
+		delete this.users[nick]
+	}
+
 	this.removePlugin = function(pluginName, callback) {
 		var self = this
 		delete this.plugins[pluginName]
@@ -252,6 +311,20 @@ exports.class = function(channelName) {
 
 	this.setDisplayName = function(displayName) {
 		this.displayName = displayName
+	}
+
+	this.setInfo = function(infoName, info) {
+		this.info[infoName] = info
+		var self = this
+		Mikuia.modules.redis.set('channel:' + this.getName() + ':info', JSON.stringify(this.info), function(err, reply) {
+			if(err) {
+				Mikuia.log(Mikuia.LogStatus.Error, 'Failed to save info for channel ' + self.getName() + '.')
+			}
+		})
+	}
+
+	this.setIRCUsers = function(users) {
+		this.users = users
 	}
 
 	this.setPluginSettings = function(pluginName, settings, callback) {
