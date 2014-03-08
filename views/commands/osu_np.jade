@@ -1,0 +1,89 @@
+extends ../layout
+
+block content
+	.jumbotron(style='margin-top: 0px; margin-bottom: 0px;')
+		.container
+			.col-md-8
+				h1 osu.np
+				| Shows the name of currently played song.
+	.container
+		.row
+			.col-md-12
+				h3 
+					| To use this feature, you need an additional application running in the background.
+					br
+					| This guide will be split into two parts for two different apps.
+					br
+					| Use the one you like more.
+		.row
+			if user
+				- var username = user.username
+			else
+				- var username = 'YOUR_TWITCH_USERNAME_HERE'
+			.col-md-6
+				h1
+					| osu!np 
+					small by 
+						a(href='http://osu.ppy.sh/u/1537497') Primula
+					br
+					a.btn.btn-primary(href='http://primpri.com/np/osunp.zip') Download from primpri.com
+					a.btn.btn-info(href='http://mikuia.tv/apps/osu!np.exe') Download from mikuia.tv
+
+				| After launching osu!np, you need to do following things:
+				ol
+					li In the first text field enter: -
+					li In the second field enter: {[a]}
+					li Press 'Config'.
+					li Select 'Output' tab.
+					li Check the 'Output Secondary' checkbox.
+					li In the first text field enter: -
+					li In the second field enter: {[t]}
+					li Select 'Directory' tab.
+					li Change the path to your osu! install directory.
+					li Select 'Upload (POST)' tab.
+					li Check the 'Toggle POST' checkbox.
+					li In the first box enter the following link:
+						br
+						b http://statpoint.info:5587/plugins/osu/post/#{username}
+					li In the second box enter the following text:
+						br
+						b key=YOUR_API_KEY_HERE
+						br
+						| Of course, replace YOUR_API_KEY_HERE with the key from 
+						a(href='/settings') your settings page.
+					li Click 'Save'.
+					li Click 'Start'.
+
+				| It's also recommended to set the first field in the 'Output' tab to 
+				b -
+				|  (yes, that's a minus sign), as well as the first field in the main window.
+				br
+				| Otherwise, the command will output the text from the fields like it's a song, even when nothing is being played.
+				br
+				br
+				img(src='/img/commands/osu_np/1.png')
+				br
+				br
+				img(src='/img/commands/osu_np/3.png')
+
+			.col-md-6
+				h1
+					| osu!Post 
+					small by 
+						a(href='http://osu.ppy.sh/u/947499') givenameplz
+					br
+					a.btn.btn-primary(href='http://osupost.givenameplz.de/download.php') Download from givenameplz.de
+					a.btn.btn-info(href='http://mikuia.tv/apps/osu!Post.exe') Download from mikuia.tv
+
+				| After launching osu!Post, you need to do following things:
+				ol
+					li Click the 'Custom link' checkbox.
+					li Paste your API key from the 
+						a(href='/settings') settings page 
+						| to the 'Key' field.
+					li In the 'URL' field paste the following link:
+						br
+						b http://statpoint.info:5587/plugins/osu/post/#{username}
+					li Check the 'Enable post' checkbox.
+				br
+				img(src='/img/commands/osu_np/2.png')
