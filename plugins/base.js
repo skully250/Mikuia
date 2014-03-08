@@ -214,8 +214,10 @@ exports.handleCommand = function(command, tokens, from, Channel) {
 								})
 								if(count > 5) {
 									Mikuia.say(Channel.getIRCName(), name + ' is currently on ' + count + ' channels: ' + channelList + ', and ' + (count - 5) + ' more...')
-								} else {
+								} else if(count > 1) {
 									Mikuia.say(Channel.getIRCName(), name + ' is currently on ' + count + ' channels: ' + channelList)
+								} else if(count == 1) {
+									Mikuia.say(Channel.getIRCName(), name + ' is currently only on ' + channelList)
 								}
 							}
 						} else {
