@@ -352,9 +352,26 @@ exports.init = function(m) {
 		})
 	}
 
+	routes.profile = function(req, res) {
+		res.render('profile', {
+			channel: Mikuia.getChannel(req.params.username)
+		})
+	}
+
 	routes.settings = function(req, res) {
 		res.render('settings')
 	}
+
+	app.get('/*', function(req, res, next) {
+		if(req.isAuthenticated()) {
+			var channel = Mikuia.getChannel(res.locals.user.username)
+			channel.setInfo('bio', res.locals.user._json.bio)
+			channel.setInfo('display_name', res.locals.user._json.display_name)
+			channel.setInfo('email', res.locals.user._json.email)
+			channel.setInfo('logo', res.locals.user._json.logo)
+		}
+		next()
+	})
 
 	app.get('/ajax/?*', function(req, res, next) {
 		res.locals.isAjax = true
@@ -377,6 +394,13 @@ exports.init = function(m) {
 	app.get('/plugins', ensureAuthenticated, routes.plugins)
 	app.get('/ajax/plugins', ensureAuthenticated, routes.plugins)
 
+	app.get('/channel/:username', routes.profile)
+	app.get('/ajax/channel/:username', routes.profile)
+	app.get('/profile/:username', routes.profile)
+	app.get('/ajax/profile/:username', routes.profile)
+	app.get('/user/:username', routes.profile)
+	app.get('/ajax/user/:username', routes.profile)
+
 	app.get('/auth/twitch', passport.authenticate('twitchtv', {scope: ['user_read']}))
 	app.get('/auth/twitch/callback', passport.authenticate('twitchtv', {
 		failureRedirect: '/login'
@@ -391,5 +415,28 @@ exports.init = function(m) {
 
 	app.get('/alive', function(req, res) {
 		res.send('Yes.')
+	})
+
+	app.get('/:username', function(req, res) {
+		if(!_.isUndefined(req.params.username)) {
+			var channel = Mikuia.getChannel(req.params.username)
+			if(channel.getInfo('apiKey')) {
+				routes.profile(req, res)
+			} else {
+				res.render('error', {
+					message: 'That page doesn\'t exist. What are you doing? -.-'
+				})
+			}
+		} else {
+			res.render('error', {
+				message: 'That page doesn\'t exist. What are you doing? -.-'
+			})
+		}
+	})
+
+	app.get('/*', function(req, res) {
+		res.render('error', {
+			message: 'That page doesn\'t exist. What are you doing? -.-'
+		})
 	})
 }

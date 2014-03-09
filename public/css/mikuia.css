@@ -43,6 +43,31 @@ label {
 	color: green !important;
 }
 
+.profile-image {
+	border: 5px solid white;
+	border-radius: 100px;
+	box-shadow: 0px 0px 10px #333;
+	float: left;
+}
+
+.profile-name {
+	font-size: 64px;
+	margin-left: 10px;
+}
+
+.profile-name.online {
+	color: blue;
+}
+
+.profile-name.streaming {
+	color: green;
+}
+
+.profile-status {
+	font-size: 24px;
+	margin-left: 10px;
+}
+
 .text-small {
 	font-size: 12px;
 }

@@ -7,8 +7,9 @@ exports.init = function(m) {
 
 exports.class = function(channelName) {
 	this.commands = {}
-	this.displayName = channelName
-	this.info = {}
+	this.info = {
+		display_name: channelName
+	}
 	this.name = channelName
 	this.plugins = {}
 	this.users = {}
@@ -77,7 +78,12 @@ exports.class = function(channelName) {
 	}
 
 	this.getDisplayName = function() {
-		return this.displayName
+		var name = this.getInfo('display_name')
+		if(name) {
+			return name
+		} else {
+			return this.getName()
+		}
 	}
 
 	this.getInfo = function(infoName) {
@@ -131,6 +137,38 @@ exports.class = function(channelName) {
 
 	this.getSettings = function(pluginName) {
 		return this.plugins[pluginName].settings
+	}
+
+	this.getShortStatus = function() {
+		if(this.getIRCName() in Mikuia.streams) {
+			return 'streaming'
+		} else if(this.getName() in Mikuia.viewers) {
+			return 'online'
+		} else {
+			return 'offline'
+		}
+	}
+
+	this.getStatus = function() {
+		if(this.getIRCName() in Mikuia.streams) {
+			if(!_.isUndefined(Mikuia.streams[this.getIRCName()].game)) {
+				return 'Streaming ' + Mikuia.streams[this.getIRCName()].game
+			} else {
+				return 'Streaming'
+			}
+		} else if(this.getName() in Mikuia.viewers) {
+			var viewObject = Mikuia.viewers[this.getName()]
+			var count = viewObject.length
+			if(count > 1) {
+				return 'Online on ' + count + ' channels'
+			} else if(count == 1) {
+				return 'Online on ' + viewObject[0]
+			} else {
+				return 'WTF IS THIS'
+			}
+		} else {
+			return 'Offline'
+		}
 	}
 
 	this.getStream = function(callback) {
@@ -310,7 +348,7 @@ exports.class = function(channelName) {
 	}
 
 	this.setDisplayName = function(displayName) {
-		this.displayName = displayName
+		this.setInfo('display_name', displayName)
 	}
 
 	this.setInfo = function(infoName, info) {
