@@ -189,6 +189,23 @@ var Mikuia = new function() {
 		})
 	}
 
+	this.sortObject = function(object) {
+		var keys = new Array()
+		var obj = {}
+
+		for(var i in object) {
+			keys.push(i)
+		}
+
+		keys.sort()
+
+		for(var i in keys) {
+			obj[keys[i]] = object[keys[i]]
+		}
+
+		return obj
+	}
+
 	this.runHooks = function(hookName) {
 		var self = this
 		async.each(this.hooks[hookName], function runHook(pluginName, callback) {

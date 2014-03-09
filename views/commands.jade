@@ -2,27 +2,30 @@ extends layout
 
 block content
 	.container
-		.col-md-12
-			div.page-header
-				h1 Commands
-		.col-md-6
-			.panel.panel-default.mikuia-blue-glow
-				.panel-heading Add a command
-				.panel-body
-					label(for='newCommand_name') 
-						| Name
-						b(style='color: red;')  (WITHOUT EXCLAMATION MARKS)
-					input.form-control#newCommand_name(type='text', name='newCommand_name', placeholder='(example: rank)')
-					label(for='newCommand_command') Command
-					select.form-control#newCommand_command(name='newCommand_command')
-					br
-					button.btn.btn-primary.btn-sm.pull-right#newCommand_add Add
-		#panels
+		.row
+			.col-md-12
+				div.page-header
+					h1 Commands
+		.row
+			.col-md-6#panels1
+				.panel.panel-default.mikuia-blue-glow#newCommand_panel
+					.panel-heading Add a command
+					.panel-body
+						label(for='newCommand_name') 
+							| Name
+							b(style='color: red;')  (WITHOUT EXCLAMATION MARKS)
+						input.form-control#newCommand_name(type='text', name='newCommand_name', placeholder='(example: rank)')
+						label(for='newCommand_command') Command
+						select.form-control#newCommand_command(name='newCommand_command')
+						br
+						button.btn.btn-primary.btn-sm.pull-right#newCommand_add Add
+			.col-md-6#panels2
 
 block footerScript
 	script(type='text/javascript').
 		listeners.push('commands', 'commands:add', 'commands:remove', 'commands:save')
 		var commands = {}
+		var lastPanel = 1
 
 		function parseName(name) {
 			return name.split('.').join('\\.').split('!').join('\\!')
@@ -66,20 +69,27 @@ block footerScript
 
 			var parsedName = parseName(data.name)
 
-			$('#panels').prepend(
-				'<div class="col-md-6" style="display: none;" id="command_' + data.name + '"> \
-					<div class="panel panel-default"> \
-						<div class="panel-heading">' + data.name + '</div> \
-						<div class="panel-body"> \
-							<small class="text-muted">' + data.command + ' - ' + commands[data.command].description + ' \
-								<ul id="command_' + data.name + '_arguments"></ul> \
-							</small> \
-							<br /> \
-							<button type="button" onclick="removeCommand(\'' + data.name + '\')" class="btn btn-danger btn-xs pull-right">Remove</button> \
-						</div>  \
-					</div> \
-				</div>'
-			)
+			var code = '<div style="display: none;" id="command_' + data.name + '"> \
+				<div class="panel panel-default"> \
+					<div class="panel-heading">' + data.name + '</div> \
+					<div class="panel-body"> \
+						<small class="text-muted">' + data.command + ' - ' + commands[data.command].description + ' \
+							<ul id="command_' + data.name + '_arguments"></ul> \
+						</small> \
+						<br /> \
+						<button type="button" onclick="removeCommand(\'' + data.name + '\')" class="btn btn-danger btn-xs pull-right">Remove</button> \
+					</div>  \
+				</div> \
+			</div>'
+
+			if(lastPanel == 1) {
+				$('#panels2').prepend(code)
+				lastPanel = 2
+			} else if(lastPanel == 2) {
+				$('#newCommand_panel').after(code)
+				lastPanel = 1
+			}
+
 			if(commands[data.command].arguments != undefined) {
 				$('#command_' + parsedName + '_arguments').before('<br />Arguments:')
 				for(var argumentKey in commands[data.command].arguments) {

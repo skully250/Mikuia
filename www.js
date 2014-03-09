@@ -87,6 +87,7 @@ exports.init = function(m) {
 	app.use(passport.session())
 	app.use(function(req, res, next) {
 		res.locals.isAjax = false
+		res.locals.Mikuia = Mikuia
 		res.locals.user = req.user
 		next()
 	})
@@ -353,8 +354,9 @@ exports.init = function(m) {
 	}
 
 	routes.profile = function(req, res) {
+		var channel = Mikuia.getChannel(req.params.username)
 		res.render('profile', {
-			channel: Mikuia.getChannel(req.params.username)
+			channel: channel
 		})
 	}
 
@@ -369,6 +371,15 @@ exports.init = function(m) {
 			channel.setInfo('display_name', res.locals.user._json.display_name)
 			channel.setInfo('email', res.locals.user._json.email)
 			channel.setInfo('logo', res.locals.user._json.logo)
+			if(!channel.getInfo('apiKey')) {
+				var newKey = Array.apply(0, Array(32)).map(function() {
+					return(function(charset) {
+						return charset.charAt(Math.floor(Math.random() * charset.length))
+					}('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'))
+				}).join('')
+
+				channel.setInfo('apiKey', newKey)
+			}
 		}
 		next()
 	})
@@ -419,13 +430,9 @@ exports.init = function(m) {
 
 	app.get('/:username', function(req, res) {
 		if(!_.isUndefined(req.params.username)) {
-			var channel = Mikuia.getChannel(req.params.username)
-			if(channel.getInfo('apiKey')) {
+			var channel = Mikuia.getChannelIfExists(req.params.username)
+			if(channel) {
 				routes.profile(req, res)
-			} else {
-				res.render('error', {
-					message: 'That page doesn\'t exist. What are you doing? -.-'
-				})
 			}
 		} else {
 			res.render('error', {

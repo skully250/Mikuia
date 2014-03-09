@@ -205,6 +205,14 @@ exports.class = function(channelName) {
 		})
 	}
 
+	this.isHidden = function() {
+		if(this.getInfo('apiKey')) {
+			return this.getSetting('base', 'hidden')
+		} else {
+			return true
+		}
+	}
+
 	this.load = function() {
 		var self = this
 		Mikuia.modules.redis.smembers('channel:' + this.getName() + ':plugins', function(err, plugins) {
@@ -234,15 +242,6 @@ exports.class = function(channelName) {
 				}
 				if(_.isObject(data)) {
 					self.info = data
-				}
-				if(!self.getInfo('apiKey')) {
-					var newKey = Array.apply(0, Array(32)).map(function() {
-					    return(function(charset) {
-					        return charset.charAt(Math.floor(Math.random() * charset.length))
-					    }('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'))
-					}).join('')
-
-					self.setInfo('apiKey', newKey)
 				}
 			} else {
 				Mikuia.log(Mikuia.LogStatus.Error, 'Failed to load info for channel ' + self.getName())

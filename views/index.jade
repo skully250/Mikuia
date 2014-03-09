@@ -30,7 +30,7 @@ block content
 						else
 							a(href='/settings').btn.btn-primary.btn-lg Start using Mikuia!
 	.container(style='width:100%; max-width: 100%; background-color: #d94f79; text-align: center; color: white; padding: 5px;')
-		a(href='http://statpoint.info:9001/', style='color: white;')
+		a(href='http://forums.mikuia.tv/', style='color: white;')
 			h1 DAMN! We have forums!
 			h3 Click here and visit them now!
 	.container
@@ -77,7 +77,7 @@ block content
 				.row
 					.col-md-8
 						h1
-							| #{featuredChannel.getDisplayName()}
+							a(href='/profile/#{featuredChannel.getDisplayName()}') #{featuredChannel.getDisplayName()}
 							span(style='font-size: 24px;')
 								|  is using Mikuia! 
 								.badge
@@ -108,7 +108,7 @@ block content
 						each stream, channel in streams
 							if stream.channel.display_name != featuredChannel.getDisplayName()
 								.col-md-3(style='font-size: 16px;')
-									a(href=stream.channel.url)
+									a(href='/profile/#{stream.channel.display_name}')
 										img(src=stream.preview.medium, width='240', height='150')
 										| #{stream.channel.display_name} 
 										.badge

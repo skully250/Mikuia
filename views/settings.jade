@@ -2,29 +2,32 @@ extends layout
 
 block content
 	.container
-		.col-md-12
-			div.page-header
-				.pull-right
-					a.btn.btn-primary.btn-sm(href='/commands') Commands
-					|  
-					a.btn.btn-primary.btn-sm(href='/plugins') Plugins
-				h1 Settings
-		.col-md-6
-			.panel.panel-default
-				.panel-body
-					span.text-muted#mikuia_status Loading Mikuia status...
-					button.btn.btn-sm.pull-right#mikuia_status_button Mikuia
-					br
-					button.btn.btn-sm.btn-warning#showApiKey Show API Key (don't show it on the stream!)
-					span#apiKey(style='display: none;')
-						b API Key: 
-						span#apiKeyString Unknown (not yet generated / failed to load)
-		#panels
+		.row
+			.col-md-12
+				div.page-header
+					.pull-right
+						a.btn.btn-primary.btn-sm(href='/commands') Commands
+						|  
+						a.btn.btn-primary.btn-sm(href='/plugins') Plugins
+					h1 Settings
+		.row
+			.col-md-6#panels1
+				.panel.panel-default
+					.panel-body
+						span.text-muted#mikuia_status Loading Mikuia status...
+						button.btn.btn-sm.pull-right#mikuia_status_button Mikuia
+						br
+						button.btn.btn-sm.btn-warning#showApiKey Show API Key (don't show it on the stream!)
+						span#apiKey(style='display: none;')
+							b API Key: 
+							span#apiKeyString Unknown (not yet generated / failed to load)
+			.col-md-6#panels2
 
 block footerScript
 	script(type='text/javascript').
 		listeners.push('settings', 'settings:enable', 'settings:disable', 'settings:plugin', 'settings:plugin:save', 'settings:plugins')
 
+		var lastPanel = 1
 		var plugins = {}
 
 		function enable() {
@@ -131,8 +134,13 @@ block footerScript
 				var plugin = data.plugins[pluginName]
 				plugins[pluginName] = plugin
 				if(!$('#plugin_' + plugin.name).length && plugin.settings.channel != undefined) {
-					$('#panels').append(
-						'<div class="col-md-6 panel-plugin" style="display: none;" id="plugin_' + plugin.name + '"> \
+					if(lastPanel == 1) {
+						lastPanel = 2
+					} else if(lastPanel == 2) {
+						lastPanel = 1
+					}
+					$('#panels' + lastPanel).append(
+						'<div class="panel-plugin" style="display: none;" id="plugin_' + plugin.name + '"> \
 							<div class="panel panel-default"> \
 								<div class="panel-heading"><img src="/img/plugins/' + plugin.name + '.png" width="24" height="24" /> ' + plugin.fullName + ' \
 								<div class="panel-body"></div> \

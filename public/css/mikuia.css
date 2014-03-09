@@ -44,10 +44,23 @@ label {
 }
 
 .profile-image {
-	border: 5px solid white;
 	border-radius: 100px;
-	box-shadow: 0px 0px 10px #333;
 	float: left;
+}
+
+.profile-image.offline {
+	border: 5px solid white;
+	box-shadow: 0px 0px 10px #333;
+}
+
+.profile-image.online {
+	border: 5px solid #5b94de;
+	box-shadow: 0px 0px 10px #5b94de;
+}
+
+.profile-image.streaming {
+	border: 5px solid #6bb85c;
+	box-shadow: 0px 0px 10px #6bb85c;
 }
 
 .profile-name {
@@ -56,11 +69,11 @@ label {
 }
 
 .profile-name.online {
-	color: blue;
+	color: #5b94de;
 }
 
 .profile-name.streaming {
-	color: green;
+	color: #6bb85c;
 }
 
 .profile-status {

@@ -35,7 +35,7 @@ if !isAjax
 									i.fa.fa-home
 									|  Home
 							li
-								a(href='http://statpoint.info:9001')
+								a(href='http://forums.mikuia.tv')
 									i.fa.fa-users
 									|  Forums
 							li
@@ -62,6 +62,9 @@ if !isAjax
 										b.caret
 									ul.dropdown-menu
 										li
+											a(href='/profile/#{user._json.display_name}') Profile
+										li.divider
+										li
 											a(href='/settings') Settings
 										li
 											a(href='/commands') Commands
@@ -81,7 +84,10 @@ if !isAjax
 			hr
 			.pull-right
 				| Made by 
-				a(href='http://github.com/Maxorq', target='_blank') Maxorq
+				a(href='http://github.com/Maxorq', target='_blank') Maxorq 
+				| (
+				a(href='http://twitch.tv/Hatsuney', target='_blank') Hatsuney
+				| )
 		br
 else
 	block content

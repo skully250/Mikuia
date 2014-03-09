@@ -32,6 +32,13 @@ exports.manifest = {
 		}
 	},
 	settings: {
+		channel: {
+			hidden: {
+				default: false,
+				description: 'Hide your status from other users.',
+				type: 'radio'
+			}
+		},
 		server: {
 			admin: 'ADMIN_NAME_HERE',
 			redisPassword: 'YES_PASSWORD_HEREEE',
@@ -202,22 +209,25 @@ exports.handleCommand = function(command, tokens, from, Channel) {
 						break
 					case 'status':
 						if(tokens.length > 2) {
-							var name = tokens[2].toLowerCase()
-							if(!_.isUndefined(Mikuia.viewers[name])) {
-								var count = Mikuia.viewers[name].length
-								var channelList = ""
-								_.each(Mikuia.viewers[name].slice(0).splice(0, 5), function(channelName) {
-									if(channelList != "") {
-										channelList += ', '
+							var channel = Mikuia.getChannel(tokens[2])
+							if(!channel.isHidden()) {
+								var name = channel.getName()
+								if(!_.isUndefined(Mikuia.viewers[name])) {
+									var count = Mikuia.viewers[name].length
+									var channelList = ""
+									_.each(Mikuia.viewers[name].slice(0).splice(0, 5), function(channelName) {
+										if(channelList != "") {
+											channelList += ', '
+										}
+										channelList += channelName
+									})
+									if(count > 5) {
+										Mikuia.say(Channel.getIRCName(), name + ' is currently on ' + count + ' channels: ' + channelList + ', and ' + (count - 5) + ' more...')
+									} else if(count > 1) {
+										Mikuia.say(Channel.getIRCName(), name + ' is currently on ' + count + ' channels: ' + channelList)
+									} else if(count == 1) {
+										Mikuia.say(Channel.getIRCName(), name + ' is currently only on ' + channelList)
 									}
-									channelList += channelName
-								})
-								if(count > 5) {
-									Mikuia.say(Channel.getIRCName(), name + ' is currently on ' + count + ' channels: ' + channelList + ', and ' + (count - 5) + ' more...')
-								} else if(count > 1) {
-									Mikuia.say(Channel.getIRCName(), name + ' is currently on ' + count + ' channels: ' + channelList)
-								} else if(count == 1) {
-									Mikuia.say(Channel.getIRCName(), name + ' is currently only on ' + channelList)
 								}
 							}
 						} else {
