@@ -1,0 +1,68 @@
+extends layout
+
+block content
+	br
+	.container
+		.row
+			.col-md-12
+				.page-header
+					h1
+						- var hidden = channel.isHidden()
+						if hidden
+							if channel.getShortStatus() == 'streaming'
+								- var className = 'streaming'
+							else 
+								- var className = 'offline'
+						else 
+							- var className = channel.getShortStatus()
+						img.profile-image(class=className, src=channel.getInfo('logo'), width='96', height='96')
+						span.profile-name(class=className)=channel.getDisplayName()
+						br
+						span.profile-status(class=className)
+							if channel.getShortStatus() == 'streaming'
+								| #{channel.getStatus()} - 
+								a(href='http://twitch.tv/#{channel.getName()}')
+									| Watch on Twitch
+							else if !hidden
+								| #{channel.getStatus()}
+		.row
+			.col-md-8
+				.panel.panel-default
+					.panel-heading Commands
+					ul.list-group.list-group-flush
+						each command, commandName in Mikuia.sortObject(channel.getCommands())
+							li.list-group-item
+								b=commandName
+								if command.command == 'dummy' && command.settings != undefined
+									|  - 
+									code #{command.settings.text}
+								else
+									|  - #{Mikuia.commands[command.command].description}
+			.col-md-4
+				.panel.panel-default
+					.panel-heading Achievements
+					.panel-body
+						.text-muted Nothing to show here yet.
+
+				.panel.panel-default
+					.panel-heading Plugins
+					ul.list-group.list-group-flush
+						each pluginName in Mikuia.sortObject(channel.getPlugins())
+							li.list-group-item
+								b=pluginName
+								|  - #{Mikuia.plugins[pluginName].manifest.description}
+
+				.panel.panel-default
+					.panel-heading Settings
+					.panel-body
+						each pluginName in Mikuia.sortObject(channel.getPlugins())
+							if channel.getSettings(pluginName)
+								b=Mikuia.plugins[pluginName].manifest.fullName
+								ul
+									each setting, settingKey in Mikuia.sortObject(Mikuia.plugins[pluginName].manifest.settings.channel)
+										case setting.type
+											when 'radio'
+												if channel.getSetting(pluginName, settingKey)
+													li #{setting.description}
+											when 'text'
+												li #{setting.name}: #{channel.getSetting(pluginName, settingKey)}
