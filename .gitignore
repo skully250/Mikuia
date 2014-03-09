@@ -1,5 +1,8 @@
 node
 node_modules
+public/apps*
+public/css/bootstrap*
+public/fonts*
 public/*.osk
 settings.json
 *.sh
