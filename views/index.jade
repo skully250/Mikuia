@@ -1,120 +1,64 @@
 extends layout
 
 block content
-	.jumbotron(style='margin-top: 0px; margin-bottom: 0px;')
-		.container
-			.row
-				.col-md-8
-					h1
-						| Mikuia
-						span(style='font-size: 24px;')
-							|  for 
-							a(href='http://twitch.tv') Twitch.tv
-					p
-						| You stream games. We make the experience better. Open-source.
-						br
-						small Supports:
-						br
-						img.index-supported-img(src='/img/plugins/osu.png', rel='tooltip', data-toggle='tooltip', title='osu!')
-						br
-						.text-muted.text-small It'll get better. I promise.
-						br
-				.col-md-4
-					br
-					img.index-screenshot(src='/img/mikuia.png')
-			.row
-				.col-md-3
-					.btn-group.btn-group-justified
-						if !user
-							a.noajax(href='/auth/twitch').btn.btn-primary.btn-lg Login to use Mikuia!
-						else
-							a(href='/settings').btn.btn-primary.btn-lg Start using Mikuia!
-	.container(style='width:100%; max-width: 100%; background-color: #d94f79; text-align: center; color: white; padding: 5px;')
-		a(href='http://forums.mikuia.tv/', style='color: white;')
-			h1 DAMN! We have forums!
-			h3 Click here and visit them now!
-	.container
-		.col-md-6
-			h2
-				.glyphicon.glyphicon-send
-				|  Game Events
-			p
-				| Realtime event notifications.
-				br
-				| Rank changes, level results, match stats.
-				br
-				| Put the info in the chat for viewers, get it through Steam, save it somewhere.
-				br
-			h2
-				.glyphicon.glyphicon-stats
-				|  Chat Utilities
-			p
-				| Commands for checking ranks, points, and levels.
-				br
-				| Let your viewers check stats with a command instead of asking repeatedly.
-			h2
-				.glyphicon.glyphicon-flash
-				|  Plugin API
-			p
-				| Nearly every single feature is a part of a plugin.
-				br
-				| Add, delete, enable, disable plugins you want to.
-				br
-				| Customize your experience.
-		.col-md-6
-			h2 Latest Commits
-			| Derp. GitHub temporarily disabled here.
-			//- if changelog != undefined
-			//- 	each commit in changelog
-			//- 		abbr.timeago(title=commit.commit.committer.date)
-			//- 		|  - 
-			//- 		a(href=commit.html_url) #{commit.commit.message}
-			//- 		br
 	br
-	if channels.length > 0 && featuredChannel != undefined
-		.jumbotron
-			.container
-				.row
-					.col-md-8
-						h1
-							a(href='/profile/#{featuredChannel.getDisplayName()}') #{featuredChannel.getDisplayName()}
-							span(style='font-size: 24px;')
-								|  is using Mikuia! 
-								.badge
-									i.fa.fa-user(style='color: red;')
-									- var viewers = channels[channels.length - 1]
-									|  #{viewers}
-						h4
-							if Object.keys(featuredChannel.getCommands()).length > 0
-								b Commands: 
-								each command, commandName in featuredChannel.getCommands()
-									| #{commandName} 
-								br
-							if Object.keys(featuredChannel.getPlugins()).length > 0
-								b Plugins: 
-								each pluginName in featuredChannel.getPlugins()
-									| #{pluginName} 
-					.col-md-4
-						object.index-screenshot#live_embed_player_flash(type='application/x-shockwave-flash', height='183', width='340', data='http://www.twitch.tv/widgets/live_embed_player.swf?channel=#{featuredChannel.getDisplayName()}')
-							param(name='allowFullScreen', value='true')
-							param(name='allowScriptAccess', value='always')
-							param(name='allowNetworking', value='all')
-							param(name='movie', value='http://www.twitch.tv/widgets/live_embed_player.swf')
-							param(name='flashvars', value='hostname=www.twitch.tv&channel=#{featuredChannel.getDisplayName()}&auto_play=true&start_volume=25')
-				if Object.keys(streams).length > 1
-					.row
-						.col-md-12
-							h3 Other Streams using Mikuia
-						each stream, channel in streams
-							if stream.channel.display_name != featuredChannel.getDisplayName()
-								.col-md-3(style='font-size: 16px;')
-									a(href='/profile/#{stream.channel.display_name}')
-										img(src=stream.preview.medium, width='240', height='150')
-										| #{stream.channel.display_name} 
-										.badge
-											i.fa.fa-user(style='color: red;')
-											|  #{stream.viewers}
+	.container
+		if Object.keys(Mikuia.streams).length > 0
+			- var Channel = Mikuia.getChannel(Mikuia.getLeaderboard('bestLive').getLeaderboard()[0])
+			- var Stream = Mikuia.streams[Channel.getIRCName()]
+			.row
+				.col-md-12
+					.panel.panel-default
+						.panel-heading Featured Stream
+						.panel-body
+							br
+							.col-lg-8
+								+userBadge(Channel, 'medium', {nameSize: 'large', sp: true, status: false})
+								h2=Stream.channel.status
+								p=Channel.getInfo('bio')
+							.col-lg-4
+								object.index-screenshot#live_embed_player_flash(type='application/x-shockwave-flash', height='183', width='340', data='http://www.twitch.tv/widgets/live_embed_player.swf?channel=#{Channel.getDisplayName()}')
+									param(name='allowFullScreen', value='true')
+									param(name='allowScriptAccess', value='always')
+									param(name='allowNetworking', value='all')
+									param(name='movie', value='http://www.twitch.tv/widgets/live_embed_player.swf')
+									param(name='flashvars', value='hostname=www.twitch.tv&channel=#{Channel.getDisplayName()}&auto_play=true&start_volume=25')
+		.row
+			.col-md-8
+				.panel.panel-default
+						.panel-heading Recent Activity
+						.panel-body
+							each activityId in Mikuia.getActivities().slice(0, 25)
+								+activity(activityId)
+			.col-md-4
+				.well
+					h3 Welcome to Mikuia!
+					p Placeholder text that I will change for a non-placeholder text later!
+
+				if '#hatsuney' in Mikuia.streams
+					.panel.panel-danger
+						.panel-heading Admins Online
+						.panel-body
+							+userBadge(Mikuia.getChannel('hatsuney'), 'small', {sp: true})
+						.panel-footer.text-danger
+							| If you have problems, feel free to visit and ask!
+
+				.panel.panel-default
+					.panel-heading Best Streamers
+					.panel-body
+						- var Leaderboard = Mikuia.getLeaderboard('sp').getLeaderboard()
+						each channelName in Leaderboard.slice(0, 3)
+							- var Channel = Mikuia.getChannel(channelName)
+							+userBadge(Channel, 'small', {sp: true})
+				if Object.keys(Mikuia.streams).length > 1
+					- var Leaderboard = Mikuia.getLeaderboard('bestLive').getLeaderboard()
+					.panel.panel-default
+						.panel-heading Other Streams
+						.panel-body
+							each channelName in Leaderboard.slice(1, Leaderboard.length)
+								- var Channel = Mikuia.getChannel(channelName)
+								+userBadge(Channel, 'small', {sp: true})
+
 block footerScript
 	script(type='text/javascript').
-		$('[rel="tooltip"]').tooltip()
-		$('abbr.timeago').timeago()
+		$.backstretch('#{Stream.channel.background}')

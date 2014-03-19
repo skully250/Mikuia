@@ -1,0 +1,44 @@
+extends layout
+
+block content
+	.container
+		.row
+			.col-md-12
+				.page-header
+					h1 Dashboard
+		.row
+			.col-md-8
+
+			.col-md-4
+				.panel.panel-default
+					.panel-heading Following
+					.panel-body#followers
+						.text-muted Loading...
+block footerScript
+	script(type='text/javascript').
+		listeners.push('dashboard:following')
+
+		io.emit('dashboard.following')
+
+		io.on('dashboard:following', function(data) {
+
+			$('#followers').html('')
+
+			$.each(data.order, function(index, value) {
+				var channel = data.channels[value]
+
+				$('#followers').append(' \
+					<div class="media"> \
+						<a class="pull-left" href="/profile/' + channel.display_name + '"> \
+							<img class="media-object logo-image ' + channel.state + '" width="36" height="36" src="' + channel.logo + '" /> \
+						</a> \
+						<div class="media-body"> \
+							<a href="/profile/' + channel.display_name + '"> \
+								<h4 class="media-heading">' + channel.display_name + '</h4> \
+							</a> \
+							<p class="text-' + channel.state + '">' + channel.status + '</p> \
+						</div> \
+					</div> \
+				')
+			})
+		})

@@ -6,7 +6,7 @@ exports.manifest = {
 	name: 'base',
 	fullName: 'Base',
 	description: 'Provides basic commands.',
-	type: 'channel',
+	type: 'server',
 	commands: {
 		'dummy': {
 			description: 'Static text.',

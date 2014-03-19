@@ -1,0 +1,8 @@
+mixin activity(activityId)
+	- var Activity = Mikuia.getActivity(activityId)
+	- var Channel = Mikuia.getChannel(Activity.getChannelName())
+	- var template = Activity.getTemplate()
+	.media
+		a.pull-left(href='/profile/' + Channel.getDisplayName())
+			+logo(Channel, 36)
+		.media-body!=Activity.render()

@@ -23,8 +23,8 @@ $(function() {
 			dataType: 'html'
 		}).done(function(html) {
 			$('#spinner').hide()
-			content.html(html)
 			content.fadeIn('fast')
+			content.html(html)
 		})
 	}
 

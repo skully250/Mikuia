@@ -1,3 +1,4 @@
+require('newrelic')
 var async = require('async')
 var cli = require('cli-color')
 var fs = require('fs')
@@ -8,7 +9,6 @@ var osuapi = require('./osuapi')
 var Redis = require('redis')
 var repl = require('repl')
 var request = require('request')
-var rollbar = require('rollbar')
 var Twitchy = require('twitchy')
 var _ = require('underscore')
 _.str = require('underscore.string')
@@ -36,6 +36,8 @@ var Mikuia = new function() {
 		Fatal: 'FATAL'
 	}
 
+	this.activities = {}
+	this.activitySort = []
 	this.channels = {}
 	this.channels2 = {}
 	this.commands = {}
@@ -48,6 +50,7 @@ var Mikuia = new function() {
 		'chat': [],
 		'enable': []
 	}
+	this.leaderboards = {}
 	this.modules = {
 		async: async,
 		cli: cli,
@@ -57,7 +60,6 @@ var Mikuia = new function() {
 		moment: moment,
 		redis: redis,
 		request: request,
-		rollbar: rollbar,
 		twitch: twitch,
 		_: _
 	}
@@ -69,12 +71,47 @@ var Mikuia = new function() {
 	this.www = www
 	this.viewers = {}
 
+	this.addActivity = function(data) {
+		var activity = new Activity()
+		activity.setData(data)
+		activity.update()
+		Mikuia.activities[activity.getId()] = activity
+		this.activitySort.unshift(activity.getId())
+	}
+
+	this.addLeaderboard = function(lbName) {
+		this.leaderboards[lbName] = new Leaderboard(lbName)
+	}
+
 	this.addViewer = function(viewerName, channelName) {
 		if(_.isUndefined(this.viewers[viewerName])) {
 			this.viewers[viewerName] = []
 		}
 		if(this.viewers[viewerName].indexOf(channelName) == -1) {
 			this.viewers[viewerName].push(channelName)
+		}
+	}
+
+	this.getActivities = function() {
+		return this.activitySort
+	}
+
+	this.getActivity = function(id, cb) {
+		var self = this
+		if(id in this.activities) {
+			return this.activities[id]
+		} else {
+			if(cb != undefined) {
+				var act = new Activity(id, function(err, activity) {
+					if(!err) {
+						self.activities[id] = activity
+					}
+					cb(err, activity)
+				})
+			} else {
+				this.activities[id] = new Activity(id)
+				return this.activities[id]
+			}
 		}
 	}
 
@@ -109,8 +146,16 @@ var Mikuia = new function() {
 		}
 	}
 
+	this.getLeaderboard = function(lbName) {
+		if(lbName in this.leaderboards) {
+			return this.leaderboards[lbName]
+		} else {
+			return false
+		}
+	}
+
 	this.handleError = function(message) {
-		rollbar.reportMessage(message)
+		// wat
 	}
 
 	this.handleMessage = function(from, channel, message) {
@@ -237,9 +282,15 @@ var Mikuia = new function() {
 	this.refreshViewers = refreshViewers
 }
 
+var activity = require('./models/Activity')
 var channel = require('./models/Channel')
+var leaderboard = require('./models/Leaderboard')
+activity.init(Mikuia)
 channel.init(Mikuia)
+leaderboard.init(Mikuia)
+var Activity = activity.class
 var Channel = channel.class
+var Leaderboard = leaderboard.class
 
 Mikuia.log(Mikuia.LogStatus.Normal, 'Starting up Mikuia...')
 
@@ -295,8 +346,6 @@ fs.readFile('settings.json', {encoding: 'utf8'}, function(err, data) {
 				Mikuia.log(Mikuia.LogStatus.Error, 'One of the plugins failed to load.')
 			}
 			initTwitch()
-			rollbar.init(Mikuia.settings.plugins.base.rollbarToken)
-			rollbar.handleUncaughtExceptions(Mikuia.settings.plugins.base.rollbarToken, { exitOnCaughtException: false })
 			fs.writeFileSync('settings.json', JSON.stringify(Mikuia.settings, null, '\t'))
 			Mikuia.runHooks('10s')
 			//Mikuia.runHooks('1h')
@@ -313,8 +362,9 @@ setInterval(function() {
 }, 60000)
 
 setInterval(function() {
-	Mikuia.runHooks('5m')
-	refreshViewers()
+	refreshViewers(function(err) {
+		Mikuia.runHooks('5m')
+	})
 }, 300000)
 
 setInterval(function() {
@@ -402,7 +452,28 @@ function initTwitch() {
 		}
 	})
 
-	refreshViewers()
+	Mikuia.modules.redis.smembers('activities', function(err, reply) {
+		if(!err) {
+			async.each(reply, function(activityId, asyncCallback) {
+				Mikuia.getActivity(activityId)
+				setTimeout(function() {
+					asyncCallback(false)
+				}, 1000)
+			}, function(err) {
+				if(err) {
+					console.log('OH COME ON')
+				}
+				Mikuia.activitySort = _.sortBy(Object.keys(Mikuia.activities), function(activityId) { return Mikuia.getActivity(activityId).getDate() * -1 })
+			})
+		}
+	})
+
+	Mikuia.addLeaderboard('bestLive')
+	Mikuia.addLeaderboard('viewers')
+
+	refreshViewers(function(err) {
+		// derp
+	})
 }
 
 function getViewers(callback) {
@@ -414,31 +485,38 @@ function getViewers(callback) {
 	})
 }
 
-function refreshViewers() {
+function refreshViewers(callback) {
 	redis.smembers('channels', function(err, channels) {
 		if(err) {
 			Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get channel list from Redis for refreshing viewers.')
 		} else {
-			async.each(channels, function(channel, callback) {
+			async.each(channels, function(channel, asyncCallback) {
 				Mikuia.getChannel(channel).getStream(function(err, stream) {
 					if(!err) {
 						if(stream != null) {
-							Mikuia.getChannel(channel).setDisplayName(stream.channel.display_name)
 							Mikuia.streams['#' + channel] = stream
 							redis.zadd('viewers', stream.viewers, channel)
+
+							Mikuia.getLeaderboard('bestLive').updateScore(channel, Mikuia.getChannel(channel).getInfo('sp'))
+							Mikuia.getLeaderboard('viewers').updateScore(channel, stream.viewers)
+
 						} else {
 							delete Mikuia.streams['#' + channel]
 							redis.zrem('viewers', channel)
+
+							Mikuia.getLeaderboard('bestLive').remove(channel)
+							Mikuia.getLeaderboard('viewers').remove(channel)
 						}
 					} else {
 						Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get a stream (' + channel + ').')
 					}
-					callback(err)
+					asyncCallback(err)
 				})
 			}, function(err) {
 				if(err) {
 					Mikuia.log(Mikuia.LogStatus.Error, 'One of the streams failed to refresh viewers.')
 				}
+				callback(err)
 			})
 		}
 	})

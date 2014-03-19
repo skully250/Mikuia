@@ -1,0 +1,7 @@
+h4.media-heading
+	a(href='/profile/' + Channel.getDisplayName())=Channel.getDisplayName()
+	|  gained 
+	b #{content.pp}pp
+	| , and achieved rank 
+	b ##{content.rank} 
+	abbr.timeago(title=(new Date(Activity.getData().date)).toISOString())=Activity.getData().date

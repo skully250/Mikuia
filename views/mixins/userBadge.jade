@@ -1,0 +1,73 @@
+mixin userBadge(channel, size, options)
+	if options == undefined
+		- var options = { link: true, nameSize: size, sp: false, status: true }
+	if options.link == undefined
+		- options.link = true
+	if options.sp == undefined
+		- options.sp = false
+	if options.status == undefined
+		- options.status = true
+	if options.nameSize == undefined
+		- options.nameSize = size
+	case size
+		when 'small'
+			- var imageSize = 36
+		when 'medium'
+			- var imageSize = 64
+		when 'large'
+			- var imageSize = 96
+	if options.sp
+		- var rank = Mikuia.getLeaderboard('sp').getLeaderboard().indexOf(channel.getName()) + 1
+		- var sp = channel.getInfo('sp')
+		if sp > 0
+			- sp = Math.round(sp)
+		else
+			- sp = 0
+	- var donator = channel.getInfo('donator')
+
+	.media
+		a.pull-left(href='/profile/' + channel.getDisplayName())
+			+logo(channel, imageSize)
+		.media-body
+			if options.link
+				a(href='/profile/' + channel.getDisplayName())
+					h4.media-heading(class='user-' + options.nameSize + '-name')
+						| #{channel.getDisplayName()}
+						if donator
+							+heart
+			else
+				h4.media-heading(class='user-' + options.nameSize + '-name')
+					| #{channel.getDisplayName()}
+					if donator
+						+heart
+			if options.sp
+				case options.nameSize
+					when 'small'
+						abbr: small.text-muted.pull-right #{sp}sp, ##{rank}
+					when 'medium'
+						abbr: .text-muted.pull-right #{sp}sp, rank ##{rank}
+					when 'large'
+						abbr: .text-muted.pull-right #{sp}sp, rank ##{rank}
+			if options.status
+				- var status = channel.getShortStatus()
+				if channel.getName() == 'hatsuney'
+					if status == 'streaming'
+						- status = 'admin-streaming'
+					else
+						- status = 'admin'
+				p(class='text-' + status)
+					| #{channel.getStatus()}
+					if status == 'streaming' || status == 'admin-streaming'
+						|  - 
+						a(href='http://twitch.tv/' + channel.getDisplayName()) Watch
+
+		//- span(class='user-' + options.nameSize + '-name')=channel.getDisplayName()
+		//- br
+		//- if options.status
+		//- 	span(class='user-' + size + '-status')
+		//- 		if channel.getShortStatus() == 'streaming'
+		//- 			| #{channel.getStatus()} - 
+		//- 			a(href='http://twitch.tv/#{channel.getName()}')
+		//- 				| Watch on Twitch
+		//- 		else if !hidden
+		//- 			| #{channel.getStatus()}

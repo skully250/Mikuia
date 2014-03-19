@@ -7,37 +7,29 @@ block content
 			.col-md-12
 				.page-header
 					h1
-						- var hidden = channel.isHidden()
-						if hidden
-							if channel.getShortStatus() == 'streaming'
-								- var className = 'streaming'
-							else 
-								- var className = 'offline'
-						else 
-							- var className = channel.getShortStatus()
-						img.profile-image(class=className, src=channel.getInfo('logo'), width='96', height='96')
-						span.profile-name(class=className)=channel.getDisplayName()
-						br
-						span.profile-status(class=className)
-							if channel.getShortStatus() == 'streaming'
-								| #{channel.getStatus()} - 
-								a(href='http://twitch.tv/#{channel.getName()}')
-									| Watch on Twitch
-							else if !hidden
-								| #{channel.getStatus()}
+						+userBadge(channel, 'large', {link: false})
 		.row
 			.col-md-8
+				.panel.panel-default
+					.panel-heading Activity Log
+					.panel-body
+						each activityId in channel.getActivities()
+							+activity(activityId)
+
 				.panel.panel-default
 					.panel-heading Commands
 					ul.list-group.list-group-flush
 						each command, commandName in Mikuia.sortObject(channel.getCommands())
 							li.list-group-item
 								b=commandName
-								if command.command == 'dummy' && command.settings != undefined
-									|  - 
-									code #{command.settings.text}
+								if command
+									if command.command == 'dummy' && command.settings != undefined
+										|  - 
+										code #{command.settings.text}
+									else
+										|  - #{Mikuia.commands[command.command].description}
 								else
-									|  - #{Mikuia.commands[command.command].description}
+									|  - Broken.
 			.col-md-4
 				.panel.panel-default
 					.panel-heading Achievements

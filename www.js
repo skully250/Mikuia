@@ -24,7 +24,6 @@ exports.init = function(m) {
 	redis = Mikuia.modules.redis
 	RedisStore = require('connect-redis')(express)
 	request = require('request')
-	rollbar = require('rollbar')
 	twitch = require('passport-twitchtv').Strategy
 	_ = Mikuia.modules._
 	app = express()
@@ -93,8 +92,6 @@ exports.init = function(m) {
 	})
 	app.use(app.router)
 
-	app.use(rollbar.errorHandler(Mikuia.settings.plugins.base.rollbarToken))
-
 	io.sockets.on('connection', function(socket) {
 
 		var Channel = Mikuia.getChannel(socket.handshake.user.username)
@@ -136,6 +133,50 @@ exports.init = function(m) {
 					})
 				} else {
 					// TODO
+				}
+			})
+		})
+
+		socket.on('dashboard.following', function(data) {
+			Channel.getFollowing(function(err, reply) {
+				if(!err) {
+
+					var channels = {}
+					var list = {
+						streaming: [],
+						online: [],
+						offline: []
+					}
+
+					_.each(reply, function(channelName) {
+
+						var chan = Mikuia.getChannel(channelName)
+						var status = chan.getShortStatus()
+						list[status].push(chan.getName())
+						channels[chan.getName()] = {
+							display_name: chan.getDisplayName(),
+							logo: chan.getLogo(),
+							state: chan.getShortStatus(),
+							status: chan.getStatus()
+						}
+						if(chan.getIRCName() in Mikuia.streams) {
+							channels[chan.getName()].viewers = Mikuia.streams[chan.getIRCName().viewers]
+						}
+
+					})
+
+					list.streaming.sort()
+					list.online.sort()
+					list.offline.sort()
+
+					var order = list.streaming.concat(list.online) //.concat(list.offline)
+
+					socket.emit('dashboard:following', {
+						channels: channels,
+						order: order
+					})
+				} else {
+					// TODO TOO
 				}
 			})
 		})
@@ -281,10 +322,14 @@ exports.init = function(m) {
 		res.render('commands')
 	}
 
+	routes.dashboard = function(req, res) {
+		res.render('dashboard')
+	}
+
 	routes.guide = function(req, res) {
 		var wrongCommands = 0
-		_.each(Mikuia.channels, function(channel) {
-			for(var command in channel.commands) {
+		_.each(Mikuia.channels2, function(channel) {
+			for(var command in channel.getCommands()) {
 				if(command.indexOf('!') == 0) {
 					wrongCommands++
 				}
@@ -295,53 +340,57 @@ exports.init = function(m) {
 		})
 	}
 
-	routes.index = function(req, res) {
-		// async.parallel({
-		// 	// github: function(callback) {
-		// 	// 	request({
-		// 	// 		url: 'https://api.github.com/repos/Maxorq/Mikuia/commits',
-		// 	// 		headers: {
-		// 	// 			'User-Agent': 'Mikuia'
-		// 	// 		}
-		// 	// 	}, function(error, response, body) {
-		// 	// 		if(!error && response.statusCode == 200) {
-		// 	// 			callback(null, JSON.parse(body))
-		// 	// 		} else {
-		// 	// 			callback(error, null)
-		// 	// 		}
-		// 	// 	})
-		// 	// },
-		// 	redis: function(callback) {
-		// 		redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
-		// 			callback(err, data)
-		// 		})
-		// 	}
-		// }, function(err, results) {
-			// if(err) {
-			// 	Mikuia.log(Mikuia.LogStatus.Error, 'Something went wrong while opening index page.')
-			// }
-			var channels = {}
-			var featuredChannel = {}
-			redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
-	 			if(!err && data.length > 0) {
-					featuredChannel = Mikuia.getChannel(data[data.length - 2].toLowerCase())
-	 				channels = data
-	 			}
-		 		res.render('index', {
-					//changelog: github,
-					channels: channels,
-					featuredChannel: featuredChannel,
-					streams: Mikuia.streams
-				})
-	 		})
-			//var github = {}
-			// if(results.redis.length > 0) {
-			// }
-			// if(results.github != null) {
-			// 	github = results.github.splice(0, 14)
-			// }
+	// routes.index = function(req, res) {
+	// 	// async.parallel({
+	// 	// 	// github: function(callback) {
+	// 	// 	// 	request({
+	// 	// 	// 		url: 'https://api.github.com/repos/Maxorq/Mikuia/commits',
+	// 	// 	// 		headers: {
+	// 	// 	// 			'User-Agent': 'Mikuia'
+	// 	// 	// 		}
+	// 	// 	// 	}, function(error, response, body) {
+	// 	// 	// 		if(!error && response.statusCode == 200) {
+	// 	// 	// 			callback(null, JSON.parse(body))
+	// 	// 	// 		} else {
+	// 	// 	// 			callback(error, null)
+	// 	// 	// 		}
+	// 	// 	// 	})
+	// 	// 	// },
+	// 	// 	redis: function(callback) {
+	// 	// 		redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
+	// 	// 			callback(err, data)
+	// 	// 		})
+	// 	// 	}
+	// 	// }, function(err, results) {
+	// 		// if(err) {
+	// 		// 	Mikuia.log(Mikuia.LogStatus.Error, 'Something went wrong while opening index page.')
+	// 		// }
+	// 		var channels = {}
+	// 		var featuredChannel = {}
+	// 		redis.zrange('viewers', 0, -1, "WITHSCORES", function(err, data) {
+	//  			if(!err && data.length > 0) {
+	// 				featuredChannel = Mikuia.getChannel(data[data.length - 2].toLowerCase())
+	//  				channels = data
+	//  			}
+	// 	 		res.render('index', {
+	// 				//changelog: github,
+	// 				channels: channels,
+	// 				featuredChannel: featuredChannel,
+	// 				streams: Mikuia.streams
+	// 			})
+	//  		})
+	// 		//var github = {}
+	// 		// if(results.redis.length > 0) {
+	// 		// }
+	// 		// if(results.github != null) {
+	// 		// 	github = results.github.splice(0, 14)
+	// 		// }
 			
-		//})
+	// 	//})
+	// }
+
+	routes.index = function(req, res) {
+		res.render('index')
 	}
 
 	routes.plugins = function(req, res) {
@@ -390,7 +439,7 @@ exports.init = function(m) {
 	})
 
 	app.get('/', routes.index)
-	app.get('/ajax/', routes.index)
+	app.get('/ajax', routes.index)
 	app.get('/channels', routes.channels)
 	app.get('/ajax/channels', routes.channels)
 	app.get('/channels', routes.channels)
@@ -398,6 +447,8 @@ exports.init = function(m) {
 	app.get('/ajax/command/:command', routes.command)
 	app.get('/commands', ensureAuthenticated, routes.commands)
 	app.get('/ajax/commands', ensureAuthenticated, routes.commands)
+	app.get('/dashboard', ensureAuthenticated, routes.dashboard)
+	app.get('/ajax/dashboard', ensureAuthenticated, routes.dashboard)
 	app.get('/guide', routes.guide)
 	app.get('/ajax/guide', routes.guide)
 	app.get('/settings', ensureAuthenticated, routes.settings)

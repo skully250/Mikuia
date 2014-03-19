@@ -1,0 +1,17 @@
+mixin logo(Channel, size)
+	if size == undefined
+		- var size = 96
+	- var hidden = Channel.isHidden()
+	if hidden
+		if Channel.getShortStatus() == 'streaming'
+			- var className = 'streaming'
+		else 
+			- var className = 'offline'
+	else 
+		- var className = Channel.getShortStatus()
+	if Channel.getName() == 'hatsuney'
+		if Channel.getShortStatus() == 'streaming'
+			- var className = 'admin-streaming'
+		else
+			- var className ='admin'
+	img.logo-image(class=className, src=Channel.getLogo(), width=size, height=size)

@@ -6,6 +6,7 @@ exports.init = function(m) {
 }
 
 exports.class = function(channelName) {
+	this.activities = []
 	this.commands = {}
 	this.info = {
 		display_name: channelName
@@ -13,6 +14,11 @@ exports.class = function(channelName) {
 	this.name = channelName
 	this.plugins = {}
 	this.users = {}
+
+	this.addActivity = function(Activity) {
+		this.activities.push(Activity.getId())
+		this.activities = _.sortBy(this.activities, function(activityId) { return Mikuia.getActivity(activityId).getDate() * -1 })
+	}
 
 	this.addCommand = function(commandName, command, callback) {
 		var self = this
@@ -65,6 +71,10 @@ exports.class = function(channelName) {
 		this.addPlugin('base', function() {})
 	}
 
+	this.getActivities = function() {
+		return this.activities
+	}
+
 	this.getCommand = function(commandName) {
 		if(commandName in this.commands) {
 			return this.commands[commandName]
@@ -84,6 +94,18 @@ exports.class = function(channelName) {
 		} else {
 			return this.getName()
 		}
+	}
+
+	this.getFollowing = function(callback) {
+		Mikuia.modules.twitch.getFollowedChannels(this.getName(), function(err, reply) {
+			var channels = []
+			if(!err) {
+				_.each(reply.follows, function(element, key, list) {
+					channels.push(element.channel.name)
+				})
+			}
+			callback(err, channels)
+		})
 	}
 
 	this.getInfo = function(infoName) {
@@ -107,6 +129,14 @@ exports.class = function(channelName) {
 			return this.users[user]
 		} else {
 			return false
+		}
+	}
+
+	this.getLogo = function() {
+		if(this.getInfo('logo')) {
+			return this.getInfo('logo')
+		} else {
+			return '/img/logo.png'
 		}
 	}
 
@@ -151,7 +181,7 @@ exports.class = function(channelName) {
 
 	this.getStatus = function() {
 		if(this.getIRCName() in Mikuia.streams) {
-			if(!_.isUndefined(Mikuia.streams[this.getIRCName()].game)) {
+			if(!_.isUndefined(Mikuia.streams[this.getIRCName()].game) && !_.isNull(Mikuia.streams[this.getIRCName()].game)) {
 				return 'Streaming ' + Mikuia.streams[this.getIRCName()].game
 			} else {
 				return 'Streaming'
@@ -164,7 +194,7 @@ exports.class = function(channelName) {
 			} else if(count == 1) {
 				return 'Online on ' + viewObject[0]
 			} else {
-				return 'WTF IS THIS'
+				return 'Offline'
 			}
 		} else {
 			return 'Offline'
@@ -220,6 +250,9 @@ exports.class = function(channelName) {
 				_.each(plugins, function(pluginName) {
 					self.loadPlugin(pluginName)
 				})
+				if(plugins.indexOf('base') == -1) {
+					self.loadPlugin('base')
+				}
 			} else {
 				Mikuia.log(Mikuia.LogStatus.Error, 'Failed to load a list of plugins for channel ' + self.getName())
 			}
@@ -242,6 +275,9 @@ exports.class = function(channelName) {
 				}
 				if(_.isObject(data)) {
 					self.info = data
+				}
+				if(_.isUndefined(self.info.logo)) {
+					self.update()
 				}
 			} else {
 				Mikuia.log(Mikuia.LogStatus.Error, 'Failed to load info for channel ' + self.getName())
@@ -368,6 +404,25 @@ exports.class = function(channelName) {
 		this.plugins[pluginName].settings = settings
 		Mikuia.modules.redis.set('channel:' + this.getName() + ':plugin:' + pluginName + ':settings', JSON.stringify(settings), function(err, reply) {
 			callback(err, reply)
+		})
+	}
+
+	this.update = function() {
+		var self = this
+		Mikuia.modules.twitch._get('users/' + this.getName(), function(err, user) {
+			if(!err && !_.isUndefined(user.req.res.body)) {
+				var fields = [
+					'display_name',
+					'bio',
+					'logo'
+				]
+
+				_.each(fields, function(fieldName) {
+					if(!_.isNull(user.req.res.body[fieldName])) {
+						self.setInfo(fieldName, user.req.res.body[fieldName])
+					}
+				})
+			}
 		})
 	}
 
