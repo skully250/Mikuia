@@ -16,8 +16,8 @@ exports.class = function(channelName) {
 	this.users = {}
 
 	this.addActivity = function(Activity) {
-		this.activities.push(Activity.getId())
 		this.activities = _.sortBy(this.activities, function(activityId) { return Mikuia.getActivity(activityId).getDate() * -1 })
+		this.activities.unshift(Activity.getId())
 	}
 
 	this.addCommand = function(commandName, command, callback) {
