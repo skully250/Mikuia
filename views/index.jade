@@ -31,10 +31,21 @@ block content
 							each activityId in Mikuia.getActivities().slice(0, 25)
 								+activity(activityId)
 			.col-md-4
-				.well
-					h3 Welcome to Mikuia!
-					p a Twitch.tv bot designed for actual gaming, not just chat moderation!
-					a.btn.btn-primary(href='/guide') Read the guide »
+
+				if !user
+					.well
+						h3 Welcome to Mikuia!
+						p a Twitch.tv bot designed for actual gaming, not just chat moderation!
+						a.btn.btn-primary(href='/guide') Read the guide »
+				else if !Mikuia.getChannel(user.username).getInfo('donator')
+					.well
+						h3 Consider donating?
+						p
+							| Want to make me feel better about all those wasted hours? Also, I'm hungry...
+							br
+							| I'll give you a little heart next to your name!
+						a.btn.btn-primary(href='https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=psqmaxor%40gmail%2ecom&lc=GB&item_name=Mikuia&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted', target='_blank') Donate »
+
 
 				if '#hatsuney' in Mikuia.streams
 					.panel.panel-danger
