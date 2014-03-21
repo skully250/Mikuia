@@ -6,6 +6,10 @@ label {
 	white-space: pre-wrap;
 }
 
+.font-small {
+	font-size: 10px;
+}
+
 .footer {
 	color: #888;
 }
@@ -31,6 +35,10 @@ label {
 
 .input-group {
 	margin-bottom: 5px;
+}
+
+.jumbotron {
+	background-image: linear-gradient(to bottom, #563d7c 0, #6f5499 100%);
 }
 
 .jumbotron a {
@@ -73,6 +81,10 @@ label {
 .logo-image.streaming {
 	border: 3px solid #6bb85c;
 	box-shadow: 0px 0px 5px #6bb85c;
+}
+
+.navbar {
+	margin-bottom: 0px;
 }
 
 .navbar-error {
@@ -125,6 +137,27 @@ label {
 .profile-status {
 	font-size: 24px;
 	margin-left: 10px;
+}
+
+.sidebar .nav>li>a {
+	display: block;
+	font-size: 13px;
+	font-weight: 300;
+	color: #999;
+	padding: 4px 20px;
+}
+
+.sidebar .nav>li>a:hover, .sidebar .nav>li>a:focus {
+	background-color: white;
+	border-left: 1px solid #7a62d3;
+	color: #7a62d3;
+}
+
+.sidebar .nav>.active>a {
+	border-left: 2px solid #7a62d3;
+	color: #7a62d3;
+	font-weight: 500;
+	padding-left: 18px;
 }
 
 .text-admin {

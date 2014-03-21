@@ -1,0 +1,91 @@
+extends layout
+
+block content
+	.jumbotron
+		.container
+			.col-md-8
+				h1
+					| FAQ
+					span(style='font-size: 24px;')
+						|  and stuff
+				h2 Written in first person, me!
+	.container
+		.row
+			.col-md-9
+				section#content
+					article#accounts
+						h1.page-header Accounts
+						p.lead Names used throughout Mikuia services, and the reasons.
+						p
+							ul
+								li
+									b Mikuia
+									|  - that one is pretty obvious, used on Twitch
+								li
+									b Maxorq
+									|  - my accounts, used for osu!, since I can't register multiple accounts
+								li
+									b Hatsuney
+									|  - my Twitch account, since Maxorq was a Justin.tv one, and I was too lazy to ask support about it.
+							| It's possible that I'll ask peppy about another account with pretty solid arguments in the future.
+							br
+							| For now though, you'll have to struggle with this.
+					article#domain
+						h1.page-header Domain
+						p.lead Someone gave you the Statpoint link, and now it's not working? Geez.
+						p
+							| Yes, the website WAS hosted on statpoint.info some time ago.
+							br
+							| No, it's not there anymore. I changed servers, and finally configured the domain properly.
+							br
+							| No, I didn't give you the 5587 link. Someone else did. I made sure not to give that link to people to AVOID CONFUSION LATER.
+							br
+							| Obviously, someone didn't care, and gave you that link anyways.
+							br
+							| I hate that person.
+					article#issues
+						h1.page-header Issues
+						p.lead Mikuia not working? Restarting all the time? Spamming?
+						p
+							| Oh well, tough shit, this is a project I made for TWO people, and for some reason it just blew up.
+							br
+							| I'm trying to do what I can, but it's just impossible to track down all the problems by yourself.
+							br
+							| Also, since I love coding and testing in production, it might lose a message or two.
+							br
+							| ALSO, this is free, and open-source. If you can do better, please come and help me.
+							br
+							| I'm so lonely. ;_;
+					article#sp
+						h1.page-header Streamer Points
+						p.lead Still a fresh buggy concept, basically a ranking for livestreams.
+						p
+							| Since calculations have to be secret for obvious reasons, they won't be disclosed.
+							br
+							| From what I *can* say though, here are some tips to increase your score:
+							ul
+								li Stream less popular games (not League of Legends or Dota 2)
+								li Stream often, don't disappear for weeks
+								li Interact with your viewers, gain followers
+							| For now, SP is used to determine the featured stream on homepage, but it will get more useful in the future.
+			.col-md-3
+				nav.sidebar.affix.visible-lg#affix-nav(style='position: relative;')
+					ul.nav.sidenav(data-spy='affix', data-offset-top='40', data-offset-bottom='200')
+						li.active
+							a(href='#accounts') Accounts
+						li
+							a(href='#domain') Domain
+						li
+							a(href='#issues') Issues
+						li
+							a(href='#sp') Streamer Points
+block footerScript
+	script(type='text/javascript').
+		$('#affix').affix({
+			offset: {
+				top: 100,
+				bottom: function() {
+					return (this.bottom = $('.footer').outerHeight(true))
+				}
+			}
+		})

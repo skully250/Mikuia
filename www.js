@@ -326,6 +326,10 @@ exports.init = function(m) {
 		res.render('dashboard')
 	}
 
+	routes.faq = function(req, res) {
+		res.render('faq')
+	}
+
 	routes.guide = function(req, res) {
 		var wrongCommands = 0
 		_.each(Mikuia.channels2, function(channel) {
@@ -453,6 +457,8 @@ exports.init = function(m) {
 	app.get('/ajax/commands', ensureAuthenticated, routes.commands)
 	app.get('/dashboard', ensureAuthenticated, routes.dashboard)
 	app.get('/ajax/dashboard', ensureAuthenticated, routes.dashboard)
+	app.get('/faq', routes.faq)
+	app.get('/ajax/faq', routes.faq)
 	app.get('/guide', routes.guide)
 	app.get('/ajax/guide', routes.guide)
 	app.get('/leaderboard', routes.leaderboard)
