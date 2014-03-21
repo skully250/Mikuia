@@ -33,7 +33,8 @@ block content
 			.col-md-4
 				.well
 					h3 Welcome to Mikuia!
-					p Placeholder text that I will change for a non-placeholder text later!
+					p a Twitch.tv bot designed for actual gaming, not just chat moderation!
+					a.btn.btn-primary(href='/guide') Read the guide »
 
 				if '#hatsuney' in Mikuia.streams
 					.panel.panel-danger
@@ -52,7 +53,7 @@ block content
 							+userBadge(Channel, 'small', {sp: true})
 					.panel-footer
 						a(href='/leaderboard') View full leaderboard »
-						
+
 				if Object.keys(Mikuia.streams).length > 1
 					- var Leaderboard = Mikuia.getLeaderboard('bestLive').getLeaderboard()
 					.panel.panel-default
