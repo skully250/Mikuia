@@ -55,7 +55,11 @@ exports.handleCommand = function(command, tokens, from, Channel) {
 							console.log('D: x2')
 						}
 						if(json != undefined) {
-							Mikuia.say(Channel.getIRCName(), 'Stats for ' + json.player + ': ★ ' + json.rank + ', ' + json.fame + ' Fame, rank #' + json.fame_rank + '.')
+							if(json.fame > 0) {
+								Mikuia.say(Channel.getIRCName(), 'Stats for ' + json.player + ': ★ ' + json.rank + ', ' + json.fame + ' Fame, rank #' + json.fame_rank + '.')
+							} else {
+								Mikuia.say(Channel.getIRCName(), 'Stats for ' + json.player + ': ★ ' + json.rank + ', ' + json.fame + ' Fame.')
+							}
 						} else {
 							Mikuia.log(Mikuia.LogStatus.Error, 'RotMG - Failed to parse ' + user + ' JSON.')
 						}
