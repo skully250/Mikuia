@@ -5,3 +5,4 @@ h4.media-heading
 	|  on 
 	a.text-info(href='http://osu.ppy.sh/b/' + content.beatmap_id) #{content.artist} - #{content.title} [#{content.version}] 
 	abbr.timeago(title=(new Date(Activity.getData().date)).toISOString())=Activity.getData().date
+img.pull-right(src='/img/plugins/osu.png', width='16', height='16', rel='tooltip', title='osu!')
