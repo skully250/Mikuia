@@ -314,9 +314,6 @@ exports.init = function(m) {
 
 		var Channel = Mikuia.getChannelIfExists(req.params.username)
 
-		console.log(req.body.key)
-		console.log(Channel.getInfo('apiKey'))
-
 		if(Channel && req.body.key != undefined && Channel.getInfo('apiKey') == req.body.key) {
 			var data = req.body
 
