@@ -153,6 +153,10 @@ label {
 	margin-left: 5px;
 }
 
+.user-name-name {
+	font-size: 24px;
+}
+
 .user-large-name {
 	font-size: 64px;
 }

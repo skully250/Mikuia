@@ -393,6 +393,10 @@ exports.init = function(m) {
 		res.render('index')
 	}
 
+	routes.leaderboard = function(req, res) {
+		res.render('leaderboard')
+	}
+
 	routes.plugins = function(req, res) {
 		redis.smembers('channel:' + req.user.username + ':plugins', function(err, reply) {
 			res.render('plugins', {
@@ -451,6 +455,8 @@ exports.init = function(m) {
 	app.get('/ajax/dashboard', ensureAuthenticated, routes.dashboard)
 	app.get('/guide', routes.guide)
 	app.get('/ajax/guide', routes.guide)
+	app.get('/leaderboard', routes.leaderboard)
+	app.get('/ajax/leaderboard', routes.leaderboard)
 	app.get('/settings', ensureAuthenticated, routes.settings)
 	app.get('/ajax/settings', ensureAuthenticated, routes.settings)
 	app.get('/plugins', ensureAuthenticated, routes.plugins)

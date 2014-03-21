@@ -1,0 +1,34 @@
+extends layout
+
+block content
+	- var Leaderboard = Mikuia.getLeaderboard('sp').getLeaderboard()
+	.container
+		.row
+			.col-md-12
+				h1.page-header
+					| Leaderboard
+					small.text-muted  Streamer Points
+		.row
+			.col-md-12
+				table.table.table-bordered.table-striped
+					thead
+						th Rank
+						th Channel Name
+						th Streamer Points
+						th Followers
+					tbody
+						each channelName, i in Leaderboard
+							- var Channel = Mikuia.getChannel(channelName)
+							- var sp = Channel.getInfo('sp')
+							- var followers = Channel.getInfo('sp_followers')
+
+							if sp == null
+								- sp = 0
+							if followers == false
+								- followers = 0
+							tr
+								td.h3 ##{i + 1}
+								td
+									+userBadge(Channel, 'name')
+								td.h3 #{sp}sp
+								td.h3 #{followers}

@@ -10,6 +10,8 @@ mixin userBadge(channel, size, options)
 	if options.nameSize == undefined
 		- options.nameSize = size
 	case size
+		when 'name'
+			- var imageSize = 24
 		when 'small'
 			- var imageSize = 36
 		when 'medium'
@@ -48,7 +50,7 @@ mixin userBadge(channel, size, options)
 						abbr: .text-muted.pull-right #{sp}sp, rank ##{rank}
 					when 'large'
 						abbr: .text-muted.pull-right #{sp}sp, rank ##{rank}
-			if options.status
+			if options.status && size != 'name'
 				- var status = channel.getShortStatus()
 				if channel.getName() == 'hatsuney'
 					if status == 'streaming'
