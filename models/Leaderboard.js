@@ -64,6 +64,13 @@ exports.class = function(id) {
 		this.save()
 	}
 
+	this.removeAll = function() {
+		this.data = {}
+		this.lb = []
+		this.scores = {}
+		this.save()
+	}
+
 	this.save = function() {
 		var self = this
 		Mikuia.modules.redis.set('leaderboard:' + this.getName(), JSON.stringify({

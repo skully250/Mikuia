@@ -487,37 +487,29 @@ function getViewers(callback) {
 
 function refreshViewers(callback) {
 	redis.smembers('channels', function(err, channels) {
-		if(err) {
-			Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get channel list from Redis for refreshing viewers.')
-		} else {
-			async.each(channels, function(channel, asyncCallback) {
-				Mikuia.getChannel(channel).getStream(function(err, stream) {
-					if(!err) {
-						if(stream != null) {
-							Mikuia.streams['#' + channel] = stream
-							redis.zadd('viewers', stream.viewers, channel)
+		if(!err) {
+			var apiList = channels.join(',')
+			twitch._get('streams/?channel=' + apiList, function(error, result) {
+				if(!error && result.req.res.body.streams != undefined) {
+					Mikuia.streams = {}
+					Mikuia.getLeaderboard('bestLive').removeAll()
+					Mikuia.getLeaderboard('viewers').removeAll()
 
-							Mikuia.getLeaderboard('bestLive').updateScore(channel, Mikuia.getChannel(channel).getInfo('sp'))
-							Mikuia.getLeaderboard('viewers').updateScore(channel, stream.viewers)
+					_.each(result.req.res.body.streams, function(stream) {
+						var channelName = stream.channel.name
+						Mikuia.streams['#' + channelName] = stream
+						Mikuia.getChannel(channelName).setDisplayName(stream.channel.display_name)
 
-						} else {
-							delete Mikuia.streams['#' + channel]
-							redis.zrem('viewers', channel)
+						Mikuia.getLeaderboard('bestLive').updateScore(channelName, Mikuia.getChannel(channelName).getInfo('sp'))
+						Mikuia.getLeaderboard('viewers').updateScore(channelName, stream.viewers)
 
-							Mikuia.getLeaderboard('bestLive').remove(channel)
-							Mikuia.getLeaderboard('viewers').remove(channel)
-						}
-					} else {
-						Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get a stream (' + channel + ').')
-					}
-					asyncCallback(err)
-				})
-			}, function(err) {
-				if(err) {
-					Mikuia.log(Mikuia.LogStatus.Error, 'One of the streams failed to refresh viewers.')
+					})
+				} else {
+					Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get stream list from Twitch.')
 				}
-				callback(err)
 			})
+		} else {
+			Mikuia.log(Mikuia.LogStatus.Error, 'Failed to obtain channel list to refresh.')
 		}
 	})
 }
