@@ -6,6 +6,14 @@ label {
 	white-space: pre-wrap;
 }
 
+.footer {
+	color: #888;
+}
+
+.footer a {
+	color: #AAA;
+}
+
 .heart {
 	color: #d94f79;
 }
