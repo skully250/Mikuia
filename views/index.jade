@@ -50,6 +50,9 @@ block content
 						each channelName in Leaderboard.slice(0, 3)
 							- var Channel = Mikuia.getChannel(channelName)
 							+userBadge(Channel, 'small', {sp: true})
+					.panel-footer
+						a(href='/leaderboard') View full leaderboard »
+						
 				if Object.keys(Mikuia.streams).length > 1
 					- var Leaderboard = Mikuia.getLeaderboard('bestLive').getLeaderboard()
 					.panel.panel-default
