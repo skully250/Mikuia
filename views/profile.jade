@@ -25,7 +25,7 @@ block content
 								if command
 									if command.command == 'dummy' && command.settings != undefined
 										|  - 
-										code #{command.settings.text}
+										code.code #{command.settings.text}
 									else
 										|  - #{Mikuia.commands[command.command].description}
 								else
