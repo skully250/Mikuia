@@ -41,7 +41,8 @@ block content
 					ul.list-group.list-group-flush
 						each pluginName in Mikuia.sortObject(channel.getPlugins())
 							li.list-group-item
-								b=pluginName
+								img(src='/img/plugins/' + pluginName + '.png', width='24', height='24') 
+								b  #{Mikuia.plugins[pluginName].manifest.fullName}
 								|  - #{Mikuia.plugins[pluginName].manifest.description}
 
 				.panel.panel-default
