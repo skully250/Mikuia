@@ -31,6 +31,22 @@ block content
 								else
 									|  - Broken.
 			.col-md-4
+
+				if channel.getInfo('sp')
+					.panel.panel-default
+						.panel-heading Streamer Rank
+						.panel-body
+							- var rank = Mikuia.getLeaderboard('sp').getLeaderboard().indexOf(channel.getName()) + 1
+							.h1
+								| ##{rank} 
+								small (#{channel.getInfo('sp')}sp)
+							b=channel.getInfo('sp_followers')
+							|  followers
+							br
+							if channel.getShortStatus() == 'streaming'
+								b.text-danger #{Mikuia.streams[channel.getIRCName()].viewers}
+								|  viewers
+
 				.panel.panel-default
 					.panel-heading Achievements
 					.panel-body
