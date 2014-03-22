@@ -1,8 +1,9 @@
+var cli = require('cli-color')
 var limiter = require('limiter')
 var request = require('request')
 var _ = require('underscore')
 
-var apiRateLimiter = new limiter.RateLimiter(60, 'minute')
+var apiRateLimiter = new limiter.RateLimiter(120, 'minute')
 var tpRateLimiter = new limiter.RateLimiter(10, 'minute')
 
 var osu = function(key) {
@@ -12,6 +13,7 @@ var osu = function(key) {
 osu.prototype.getBeatmap = function(beatmapId, type, callback) {
 	var self = this
 	apiRateLimiter.removeTokens(1, function(err, remainingRequests) {
+		console.log(cli.magentaBright('osu!') + ' tokens left: ' + cli.yellowBright(remainingRequests))
 		request('http://osu.ppy.sh/api/get_beatmaps?k=' + self.key + '&' + type + '=' + beatmapId, function(error, response, body) {
 			if(!error) {
 				var err
@@ -66,6 +68,7 @@ osu.prototype.getTpUser = function(userId, callback) {
 osu.prototype.getUser = function(user, mode, callback) {
 	var self = this
 	apiRateLimiter.removeTokens(1, function(err, remainingRequests) {
+		console.log(cli.magentaBright('osu!') + ' tokens left: ' + cli.yellowBright(remainingRequests))
 		request('http://osu.ppy.sh/api/get_user?k=' + self.key + '&u=' + user + '&m=' + mode, function(error, response, body) {
 			if(!error) {
 				try {

@@ -78,7 +78,7 @@ exports.manifest = {
 			}
 		}
 	},
-	hooks: ['10s', 'chat', 'enable'],
+	hooks: ['15s', 'chat', 'enable'],
 	settings: {
 		channel: {
 			info: {
@@ -357,11 +357,11 @@ exports.load = function(Channel) {
 
 exports.runHook = function(hookName) {
 	switch(hookName) {
-		case '10s':
+		case '15s':
 		case '1h':
 			async.each(Mikuia.enabled.osu, function(channel, callback) {
 				var canWeDoIt
-				if(hookName == '10s') {
+				if(hookName == '15s') {
 					if('#' + channel in Mikuia.streams) {
 						canWeDoIt = true
 					} else {

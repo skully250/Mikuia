@@ -44,6 +44,7 @@ var Mikuia = new function() {
 	this.enabled = {}
 	this.hooks = {
 		'10s': [],
+		'15s': [],
 		'1m': [],
 		'5m': [],
 		'1h': [],
@@ -358,6 +359,10 @@ setInterval(function() {
 }, 10000)
 
 setInterval(function() {
+	Mikuia.runHooks('15s')
+}, 15000)
+
+setInterval(function() {
 	Mikuia.runHooks('1m')
 }, 60000)
 
@@ -496,20 +501,25 @@ function refreshViewers(callback) {
 					Mikuia.getLeaderboard('viewers').removeAll()
 
 					_.each(result.req.res.body.streams, function(stream) {
+						console.log('IAMDOINGEACH')
 						var channelName = stream.channel.name
 						Mikuia.streams['#' + channelName] = stream
 						Mikuia.getChannel(channelName).setDisplayName(stream.channel.display_name)
 
 						Mikuia.getLeaderboard('bestLive').updateScore(channelName, Mikuia.getChannel(channelName).getInfo('sp'))
 						Mikuia.getLeaderboard('viewers').updateScore(channelName, stream.viewers)
-
+						console.log('IENDEDEACH')
 					})
+					console.log('ISHOULDCALLBACK')
+					callback(false)
 				} else {
 					Mikuia.log(Mikuia.LogStatus.Error, 'Failed to get stream list from Twitch.')
+					callback(true)
 				}
 			})
 		} else {
 			Mikuia.log(Mikuia.LogStatus.Error, 'Failed to obtain channel list to refresh.')
+			callback(true)
 		}
 	})
 }
