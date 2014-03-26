@@ -109,9 +109,15 @@ exports.manifest = {
 				type: 'radio'
 			},
 			requestLimit: {
-				name: 'Request limit (in minutes)',
+				name: 'Request limit (min)',
 				default: 0,
 				description: 'How often can a person request',
+				type: 'text'
+			},
+			delay: {
+				name: 'Rank delay (sec)',
+				default: 0,
+				description: 'How much should the pp & rank change messages be delayed',
 				type: 'text'
 			}
 		},
@@ -383,20 +389,28 @@ exports.runHook = function(hookName) {
 
 										if(Channel.getSetting('osu', 'events')) {
 											if(diff > 0) {
-												Mikuia.say(Channel.getIRCName(), '+' + diff + 'pp!')
+												setTimeout(function() {
+													Mikuia.say(Channel.getIRCName(), '+' + diff + 'pp!')
+												}, Channel.getSetting('osu', 'delay') * 1000)
 												Mikuia.log(Mikuia.LogStatus.Normal, cli.greenBright(Channel.getSetting('osu', 'name')) + ' gained ' + cli.yellowBright('+' + diff + 'pp') + '.')
 											} else {
-												Mikuia.say(Channel.getIRCName(), diff + 'pp!')
+												setTimeout(function() {
+													Mikuia.say(Channel.getIRCName(), diff + 'pp!')
+												}, Channel.getSetting('osu', 'delay') * 1000)
 											}
 										}
 
 										if(rnk > 0) {
 											if(Channel.getSetting('osu', 'events')) {
-												Mikuia.say(Channel.getIRCName(), 'Rank: #' + user.pp_rank + ' (' + rnk +' down)')
+												setTimeout(function() {
+													Mikuia.say(Channel.getIRCName(), 'Rank: #' + user.pp_rank + ' (' + rnk +' down)')
+												}, Channel.getSetting('osu', 'delay') * 1000)
 											}
 										} else if(rnk < 0) {
 											if(Channel.getSetting('osu', 'events')) {
-												Mikuia.say(Channel.getIRCName(), 'Rank: #' + user.pp_rank + ' (' + Math.abs(rnk) +' up!)')
+												setTimeout(function() {
+													Mikuia.say(Channel.getIRCName(), 'Rank: #' + user.pp_rank + ' (' + Math.abs(rnk) +' up!)')
+												}, Channel.getSetting('osu', 'delay') * 1000)
 											}
 
 											Mikuia.addActivity({
@@ -409,6 +423,7 @@ exports.runHook = function(hookName) {
 												}
 											})
 										}
+										
 									}
 
 									if(!_.isEmpty(user.events)) {
@@ -422,7 +437,9 @@ exports.runHook = function(hookName) {
 											if(tokens) {
 												if(tokens[1] <= minRank) {
 													if(Channel.getSetting('osu', 'events')) {
-														Mikuia.say(Channel.getIRCName(), string)
+														setTimeout(function() {
+															Mikuia.say(Channel.getIRCName(), string)
+														}, Channel.getSetting('osu', 'delay') * 1000)
 													}
 												}
 
@@ -448,7 +465,9 @@ exports.runHook = function(hookName) {
 
 											} else {
 												if(Channel.getSetting('osu', 'events')) {
-													Mikuia.say(Channel.getIRCName(), string)
+													setTimeout(function() {
+														Mikuia.say(Channel.getIRCName(), string)
+													}, Channel.getSetting('osu', 'delay') * 1000)
 												}
 											}
 
