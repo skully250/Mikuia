@@ -59,7 +59,7 @@ block content
 					.panel-heading Best Streamers
 					.panel-body
 						- var Leaderboard = Mikuia.getLeaderboard('sp').getLeaderboard()
-						each channelName in Leaderboard.slice(0, 3)
+						each channelName in Leaderboard.slice(0, 5)
 							- var Channel = Mikuia.getChannel(channelName)
 							+userBadge(Channel, 'small', {sp: true})
 					.panel-footer
