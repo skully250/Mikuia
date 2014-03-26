@@ -87,6 +87,7 @@ exports.init = function(m) {
 	app.use(function(req, res, next) {
 		res.locals.isAjax = false
 		res.locals.Mikuia = Mikuia
+		res.locals.newrelic = Mikuia.modules.newrelic
 		res.locals.user = req.user
 		next()
 	})

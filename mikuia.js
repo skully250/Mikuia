@@ -1,10 +1,10 @@
-require('newrelic')
 var async = require('async')
 var cli = require('cli-color')
 var fs = require('fs')
 var irc = require('irc')
 var limiter = require('limiter').RateLimiter
 var moment = require('moment')
+var newrelic = require('newrelic')
 var osuapi = require('./osuapi')
 var Redis = require('redis')
 var repl = require('repl')
@@ -59,6 +59,7 @@ var Mikuia = new function() {
 		irc: irc,
 		limiter: limiter,
 		moment: moment,
+		newrelic: newrelic,
 		redis: redis,
 		request: request,
 		twitch: twitch,
