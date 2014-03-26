@@ -322,21 +322,21 @@ exports.init = function(m) {
 				npData[Channel.getName()] = data.mapName
 			} else if(data.primary != undefined) {
 				// osu!np
-				npData[Channel.getName()] = data.primary + ' - ' + data.secondary
+				if(data.secondary != undefined) {
+					npData[Channel.getName()] = data.secondary
+				} else {
+					npData[Channel.getName()] = data.primary
+				}
 			} else {
 				npData[Channel.getName()] = 'NoMap'
 			}
 
-			if(npData[Channel.getName()] == '- - -' || npData[Channel.getName()] == 'NoMap') {
+			if(npData[Channel.getName()] == 'Nothing~! Q^Q' || npData[Channel.getName()] == 'NoMap') {
 				npData[Channel.getName()] = '-'
 			}
 
 			console.log('New np for ' + Channel.getName() + ' is: ' + npData[Channel.getName()])
-
 		}
-
-
-
 		res.send(200)
 	})
 }

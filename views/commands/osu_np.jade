@@ -29,15 +29,26 @@ block content
 					a.btn.btn-primary(href='http://primpri.com/np/osunp.zip') Download from primpri.com
 					a.btn.btn-info(href='http://mikuia.tv/apps/osu!np.exe') Download from mikuia.tv
 
+				.alert.alert-warning
+					strong Already using osu!np? 
+					| You don't have to use Secondary Output, just don't enable it, and we'll use the primary one!
+
 				| After launching osu!np, you need to do following things:
 				ol
-					li In the first text field enter: -
-					li In the second field enter: {[a]}
 					li Press 'Config'.
 					li Select 'Output' tab.
 					li Check the 'Output Secondary' checkbox.
-					li In the first text field enter: -
-					li In the second field enter: {[t]}
+					li Put a format you want into the text fields. First fields is the text shown when no map is being played, and the second one shows when you're playing a map. Examples:
+						ul
+							li
+								b {[a] - [t]} 
+								| Artist - Title
+							li
+								b {[a] - [t] ([dl])} 
+								| Artist - Title (Download Link)
+							li
+								b {[a] - [t] (CS [cs] HP [hpd] AR [ar] OD [od])} 
+								| Artist - Title (CS _ HP _ AR _ OD _)
 					li Select 'Directory' tab.
 					li Change the path to your osu! install directory.
 					li Select 'Upload (POST)' tab.
@@ -53,13 +64,6 @@ block content
 						a(href='/settings') your settings page.
 					li Click 'Save'.
 					li Click 'Start'.
-
-				| It's also recommended to set the first field in the 'Output' tab to 
-				b -
-				|  (yes, that's a minus sign), as well as the first field in the main window.
-				br
-				| Otherwise, the command will output the text from the fields like it's a song, even when nothing is being played.
-				br
 				br
 				img(src='/img/commands/osu_np/1.png')
 				br
