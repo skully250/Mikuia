@@ -154,7 +154,7 @@ function sendRequest(Channel, from, map, link) {
 		var escapedTitle = map.title.split('(').join('{').split(')').join('}')
 		var escapedVersion = map.version.split('(').join('{').split(')').join('}')
 		banchoRateLimiter.removeTokens(1, function(err, remainingRequests) {
-			bancho.say(Channel.getSetting('osu', 'name'), 'New request from ' + from + ': (' + escapedArtist + ' - ' + escapedTitle + ' [' + escapedVersion + '])[http://' + link + ']')
+			bancho.say(Channel.getSetting('osu', 'name'), 'New request from ' + from + ': (' + escapedArtist + ' - ' + escapedTitle + ' [' + escapedVersion + '])[http://' + link + '] (' + Math.round(map.bpm) + ' BPM, ★' + (Math.round(map.difficultyrating * 100) / 100) + ')')
 		})
 	}
 }
