@@ -1,5 +1,8 @@
+.idea
+newrelic*
 node
 node_modules
+plugins/sp.js
 public/apps*
 public/css/bootstrap*
 public/fonts*
