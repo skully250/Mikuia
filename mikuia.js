@@ -94,6 +94,12 @@ var Mikuia = new function() {
 		}
 	}
 
+	this.broadcast = function(message) {
+		_.each(Mikuia.streams, function(channel, ircName, list) {
+			Mikuia.say(ircName, message)
+		})
+	}
+
 	this.getActivities = function() {
 		return this.activitySort
 	}
