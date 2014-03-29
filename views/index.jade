@@ -46,7 +46,6 @@ block content
 							| I'll give you a little heart next to your name!
 						a.btn.btn-primary(href='https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=psqmaxor%40gmail%2ecom&lc=GB&item_name=Mikuia&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted', target='_blank') Donate »
 
-
 				if '#hatsuney' in Mikuia.streams
 					.panel.panel-danger
 						.panel-heading Admins Online
@@ -54,6 +53,16 @@ block content
 							+userBadge(Mikuia.getChannel('hatsuney'), 'small', {sp: true})
 						.panel-footer.text-danger
 							| If you have problems, feel free to visit and ask!
+				else
+					.panel.panel-warning
+						.panel-heading Problems? Ideas?
+						.panel-body
+							| Feel free to contact me at any time!
+							br
+							b psqmaxor@gmail.com
+						.panel-footer
+							.pull-right.text-muted - Maxorq / Hatsuney
+							br
 
 				.panel.panel-default
 					.panel-heading Best Streamers

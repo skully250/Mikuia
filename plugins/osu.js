@@ -341,7 +341,9 @@ exports.init = function(m) {
 				npData[Channel.getName()] = '-'
 			}
 
-			console.log('New np for ' + Channel.getName() + ' is: ' + npData[Channel.getName()])
+			Mikuia.log(Mikuia.LogStatus.Normal, cli.greenBright(Channel.getDisplayName()) + ' is now playing ' + cli.cyanBright(npData[Channel.getName()]))
+		} else {
+			Mikuia.log(Mikuia.LogStatus.Warning, 'Someone tried to change np for ' + cli.greenBright(Channel.getDisplayName()) + ' using wrong API key.')
 		}
 		res.send(200)
 	})
